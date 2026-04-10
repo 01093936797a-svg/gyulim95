@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>내 투자 포트폴리오</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff;
+      --bg2: #f5f5f3;
+      --bg3: #eeede8;
+      --text: #1a1a18;
+      --text2: #6b6b67;
+      --border: rgba(0,0,0,0.12);
+      --border2: rgba(0,0,0,0.22);
+      --green: #1D9E75;
+      --green-bg: #E1F5EE;
+      --red: #E24B4A;
+      --red-bg: #FCEBEB;
+      --blue: #378ADD;
+      --amber: #BA7517;
+      --pink: #D4537E;
+      --purple: #7F77DD;
+      --gray: #888780;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1c;
+        --bg2: #2a2a28;
+        --bg3: #323230;
+        --text: #f0ede8;
+        --text2: #9a9a96;
+        --border: rgba(255,255,255,0.12);
+        --border2: rgba(255,255,255,0.22);
+        --green-bg: #0a3326;
+        --red-bg: #3a1515;
+      }
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 22px; font-weight: 500; margin-bottom: 1.5rem; }
+    h2 { font-size: 16px; font-weight: 500; color: var(--text2); margin-bottom: 1rem; }
+
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+    .metric { background: var(--bg2); border-radius: var(--radius); padding: 1rem; }
+    .metric-label { font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+    .metric-value { font-size: 22px; font-weight: 500; }
+    .up { color: var(--green); }
+    .down { color: var(--red); }
+
+    .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+
+    .add-form { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr 0.8fr auto; gap: 8px; align-items: end; margin-bottom: 1.5rem; }
+    .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+    .field input, .field select {
+      width: 100%; padding: 7px 10px; font-size: 13px;
+      border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: var(--bg); color: var(--text); outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--blue); }
+    .btn { padding: 7px 16px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; white-space: nowrap; }
+    .btn:hover { background: var(--bg2); }
+    .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-del { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 0 4px; }
+    .btn-del:hover { color: var(--red); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+
+    .donut-wrap { display: flex; align-items: center; gap: 16px; }
+    .legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .leg-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .leg-pct { margin-left: auto; color: var(--text2); }
+
+    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+    .bar-label { width: 56px; color: var(--text2); text-align: right; flex-shrink: 0; font-size: 12px; }
+    .bar-track { flex: 1; height: 8px; background: var(--bg2); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+    .bar-val { width: 44px; text-align: right; flex-shrink: 0; font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { text-align: left; font-weight: 500; color: var(--text2); padding: 6px 8px; border-bottom: 0.5px solid var(--border); }
+    tbody td { padding: 9px 8px; border-bottom: 0.5px solid var(--border); }
+    tbody tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius); font-size: 12px; }
+    .badge.up { background: var(--green-bg); color: var(--green); }
+    .badge.dn { background: var(--red-bg); color: var(--red); }
+    .cat-badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius); font-size: 12px; }
+
+    .empty { text-align: center; color: var(--text2); padding: 2rem; font-size: 14px; }
+
+    @media (max-width: 600px) {
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .add-form { grid-template-columns: 1fr 1fr; }
+      .add-form .btn-primary { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>내 투자 포트폴리오</h1>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="card">
+    <h2>종목 추가</h2>
+    <div class="add-form">
+      <div class="field"><label>종목명</label><input id="inp-name" placeholder="예: 삼성전자"/></div>
+      <div class="field"><label>자산군</label>
+        <select id="inp-cat">
+          <option>국내주식</option><option>해외주식</option><option>ETF</option>
+          <option>채권</option><option>암호화폐</option><option>현금/예금</option>
+        </select>
+      </div>
+      <div class="field"><label>평가금액 (원)</label><input id="inp-val" type="number" placeholder="1000000"/></div>
+      <div class="field"><label>수익률 (%)</label><input id="inp-ret" type="number" step="0.1" placeholder="5.2"/></div>
+      <button class="btn btn-primary" onclick="addItem()">추가 +</button>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card" style="margin-bottom:0">
+      <h2>자산 배분</h2>
+      <div class="donut-wrap">
+        <svg width="110" height="110" viewBox="0 0 100 100" id="donut"></svg>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <h2>자산군별 비중</h2>
+      <div id="bars"></div>
+    </div>
+  </div>
+  <div style="margin-bottom:1.5rem"></div>
+
+  <div class="card">
+    <h2>보유 종목</h2>
+    <table>
+      <thead><tr><th>종목명</th><th>자산군</th><th>평가금액</th><th>비중</th><th>수익률</th><th></th></tr></thead>
+      <tbody id="tbl"></tbody>
+    </table>
+  </div>
+
+  <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:1rem">데이터는 브라우저에 저장됩니다 (localStorage)</p>
+</div>
+
+<script>
+const CAT_COLORS = {
+  '국내주식':'#1D9E75','해외주식':'#378ADD','ETF':'#BA7517',
+  '채권':'#D4537E','암호화폐':'#7F77DD','현금/예금':'#888780'
+};
+
+let items = JSON.parse(localStorage.getItem('portfolio') || 'null') || [
+  {name:'삼성전자',cat:'국내주식',val:3500000,ret:8.2},
+  {name:'S&P500 ETF',cat:'ETF',val:2800000,ret:12.5},
+  {name:'미국국채 ETF',cat:'채권',val:1500000,ret:2.1},
+  {name:'Apple',cat:'해외주식',val:2000000,ret:-3.4},
+  {name:'현금',cat:'현금/예금',val:800000,ret:3.5},
+];
+
+function save() { localStorage.setItem('portfolio', JSON.stringify(items)); }
+function fmt(n) { return Math.round(n).toLocaleString('ko-KR'); }
+function fmtPct(n) { return (n >= 0 ? '+' : '') + n.toFixed(1) + '%'; }
+
+function render() {
+  const total = items.reduce((s, i) => s + i.val, 0);
+  const totalGain = items.reduce((s, i) => s + (i.val * i.ret / 100), 0);
+  const cost = total - totalGain;
+  const retPct = cost > 0 ? (totalGain / cost * 100) : 0;
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">총 자산</div><div class="metric-value">₩${fmt(total)}</div></div>
+    <div class="metric"><div class="metric-label">총 수익금</div><div class="metric-value ${totalGain>=0?'up':'down'}">${totalGain>=0?'+':''}₩${fmt(Math.abs(totalGain))}</div></div>
+    <div class="metric"><div class="metric-label">수익률</div><div class="metric-value ${retPct>=0?'up':'down'}">${fmtPct(retPct)}</div></div>
+  `;
+
+  const tbl = document.getElementById('tbl');
+  if (items.length === 0) {
+    tbl.innerHTML = '<tr><td colspan="6" class="empty">종목을 추가해주세요</td></tr>';
+  } else {
+    tbl.innerHTML = items.map((it, i) => {
+      const pct = total > 0 ? (it.val / total * 100) : 0;
+      const c = CAT_COLORS[it.cat] || '#888';
+      return `<tr>
+        <td style="font-weight:500">${it.name}</td>
+        <td><span class="cat-badge" style="background:${c}22;color:${c}">${it.cat}</span></td>
+        <td>₩${fmt(it.val)}</td>
+        <td>${pct.toFixed(1)}%</td>
+        <td><span class="badge ${it.ret>=0?'up':'dn'}">${fmtPct(it.ret)}</span></td>
+        <td><button class="btn-del" onclick="del(${i})">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  renderDonut(total);
+  renderBars(total);
+}
+
+function renderDonut(total) {
+  const cats = {};
+  items.forEach(it => { cats[it.cat] = (cats[it.cat] || 0) + it.val; });
+  const entries = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+  const svg = document.getElementById('donut');
+  const leg = document.getElementById('legend');
+  if (total === 0 || entries.length === 0) { svg.innerHTML = ''; leg.innerHTML = ''; return; }
+
+  let paths = ''; let angle = -Math.PI / 2;
+  const cx = 50, cy = 50, r = 40, ir = 22;
+  entries.forEach(([cat, val]) => {
+    const a = val / total * Math.PI * 2;
+    const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+    const x2 = cx + r * Math.cos(angle + a), y2 = cy + r * Math.sin(angle + a);
+    const ix1 = cx + ir * Math.cos(angle), iy1 = cy + ir * Math.sin(angle);
+    const ix2 = cx + ir * Math.cos(angle + a), iy2 = cy + ir * Math.sin(angle + a);
+    const lg = a > Math.PI ? 1 : 0;
+    paths += `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${lg},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${ix2.toFixed(1)},${iy2.toFixed(1)} A${ir},${ir} 0 ${lg},0 ${ix1.toFixed(1)},${iy1.toFixed(1)} Z" fill="${CAT_COLORS[cat]||'#888'}" opacity="0.85"/>`;
+    angle += a;
+  });
+  svg.innerHTML = paths;
+  leg.innerHTML = entries.map(([cat, val]) => `
+    <div class="leg-item">
+      <span class="leg-dot" style="background:${CAT_COLORS[cat]||'#888'}"></span>
+      <span>${cat}</span>
+      <span class="leg-pct">${(val/total*100).toFixed(0)}%</span>
+    </div>`).join('');
+}
+
+function renderBars(total) {
+  const cats = {};
+  items.forEach(it => { cats[it.cat] = (cats[it.cat] || 0) + it.val; });
+  const entries = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+  document.getElementById('bars').innerHTML = entries.length === 0
+    ? '<p style="color:var(--text2);font-size:13px;text-align:center;padding:1rem">데이터 없음</p>'
+    : entries.map(([cat, val]) => {
+      const pct = total > 0 ? (val / total * 100) : 0;
+      return `<div class="bar-row">
+        <span class="bar-label">${cat.length > 4 ? cat.slice(0,4) : cat}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${CAT_COLORS[cat]||'#888'}"></div></div>
+        <span class="bar-val">${pct.toFixed(1)}%</span>
+      </div>`;
+    }).join('');
+}
+
+function addItem() {
+  const name = document.getElementById('inp-name').value.trim();
+  const cat = document.getElementById('inp-cat').value;
+  const val = parseFloat(document.getElementById('inp-val').value) || 0;
+  const ret = parseFloat(document.getElementById('inp-ret').value) || 0;
+  if (!name || val <= 0) { alert('종목명과 평가금액을 입력해주세요.'); return; }
+  items.push({ name, cat, val, ret });
+  save();
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-val').value = '';
+  document.getElementById('inp-ret').value = '';
+  render();
+}
+
+function del(i) {
+  if (!confirm(`"${items[i].name}"을(를) 삭제할까요?`)) return;
+  items.splice(i, 1);
+  save();
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
