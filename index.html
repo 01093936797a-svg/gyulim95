@@ -31,29 +31,29 @@
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
     .container { max-width: 960px; margin: 0 auto; }
     h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
-    .subtitle { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
+    .subtitle { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     h2 { font-size: 14px; font-weight: 500; color: var(--text2); margin-bottom: 1rem; }
 
-    /* Sync bar */
-    .sync-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; padding: 10px 14px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 13px; }
-    .sync-bar input { flex: 1; padding: 6px 10px; font-size: 12px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); outline: none; font-family: var(--font-mono, monospace); }
-    .sync-status { font-size: 12px; color: var(--text2); white-space: nowrap; }
-    .sync-status.ok  { color: var(--green); }
-    .sync-status.err { color: var(--red); }
+    .sync-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; padding: 10px 14px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 13px; flex-wrap: wrap; }
+    .sync-bar input { flex: 1; min-width: 200px; padding: 6px 10px; font-size: 12px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); outline: none; font-family: monospace; }
+    .sync-status { font-size: 12px; white-space: nowrap; }
+    .sync-status.ok      { color: var(--green); }
+    .sync-status.err     { color: var(--red); }
     .sync-status.loading { color: var(--amber); }
+
     .btn { padding: 7px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; white-space: nowrap; }
     .btn:hover { background: var(--bg2); }
     .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
     .btn-primary:hover { opacity: 0.85; }
     .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-del { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 0 4px; }
+    .btn-del:hover { color: var(--red); }
 
-    /* Tabs */
     .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; border-bottom: 0.5px solid var(--border); }
     .tab { padding: 8px 16px; font-size: 14px; cursor: pointer; border: none; background: none; color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px; }
     .tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
     .tab-panel { display: none; } .tab-panel.active { display: block; }
 
-    /* Metrics */
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
     .metric { background: var(--bg2); border-radius: var(--radius); padding: 1rem; }
     .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
@@ -61,28 +61,24 @@
     .up { color: var(--green); } .down { color: var(--red); }
     .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
 
-    /* Account pills */
     .acct-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
     .acct-pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text2); }
     .acct-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 
-    /* Two col */
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
-
-    /* Donut & bars */
     .donut-wrap { display: flex; align-items: center; gap: 16px; }
     .legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .leg-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
     .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .leg-pct { margin-left: auto; color: var(--text2); }
+
     .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .bar-label { width: 72px; color: var(--text2); text-align: right; flex-shrink: 0; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-label { width: 80px; color: var(--text2); text-align: right; flex-shrink: 0; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .bar-track { flex: 1; height: 8px; background: var(--bg2); border-radius: 4px; overflow: visible; position: relative; }
     .bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
     .bar-target { position: absolute; top: -3px; height: 14px; width: 2px; background: var(--text); opacity: 0.4; border-radius: 1px; }
     .bar-val { width: 44px; text-align: right; flex-shrink: 0; font-size: 12px; }
 
-    /* Table */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     thead th { text-align: left; font-weight: 500; color: var(--text2); padding: 6px 8px; border-bottom: 0.5px solid var(--border); white-space: nowrap; }
     tbody td { padding: 9px 8px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
@@ -92,7 +88,6 @@
     .badge.dn   { background: var(--red-bg);   color: var(--red-dark); }
     .badge.info { background: var(--blue-bg);  color: var(--blue-dark); }
 
-    /* Alerts */
     .alerts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
     .alert { display: flex; gap: 10px; padding: 10px 14px; border-radius: var(--radius); font-size: 13px; line-height: 1.5; }
     .alert.rebal { background: var(--blue-bg);  color: var(--blue-dark);  border: 0.5px solid var(--blue); }
@@ -101,21 +96,15 @@
     .alert-icon { font-size: 16px; flex-shrink: 0; }
     .alert-body strong { display: block; font-weight: 500; margin-bottom: 2px; }
 
-    /* Rebal */
     .target-form { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 1rem; }
     .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
-    .field input, .field select { width: 100%; padding: 7px 10px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; }
+    .field input { width: 100%; padding: 7px 10px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; }
 
-    /* History */
     .chart-wrap { position: relative; height: 160px; margin-top: 8px; }
     .snap-row { display: flex; gap: 8px; margin-bottom: 8px; }
     .snap-row input { flex: 1; padding: 7px 10px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; }
-    .btn-del { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 0 4px; }
-    .btn-del:hover { color: var(--red); }
 
-    /* Loading skeleton */
-    .skeleton { background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%); background-size: 200% 100%; animation: skel 1.2s infinite; border-radius: 4px; height: 16px; }
-    @keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .error-box { background: var(--red-bg); color: var(--red-dark); border: 0.5px solid var(--red); border-radius: var(--radius); padding: 12px 16px; font-size: 13px; line-height: 1.6; margin-bottom: 1rem; }
 
     @media (max-width: 700px) {
       .metrics { grid-template-columns: 1fr 1fr; }
@@ -128,19 +117,19 @@
 <div class="container">
   <h1>내 투자 포트폴리오</h1>
   <p class="subtitle">
-    <span id="last-sync">데이터 불러오는 중...</span>
+    <span id="last-sync">연결 중...</span>
     <button class="btn btn-sm" onclick="loadSheets()" style="margin-left:auto">↻ 새로고침</button>
   </p>
 
-  <!-- Sheets URL 입력 -->
   <div class="sync-bar">
     <span style="font-size:12px;color:var(--text2);white-space:nowrap">Sheets URL</span>
-    <input id="sheets-url" placeholder="Google Sheets CSV URL을 붙여넣으세요"/>
+    <input id="sheets-url" placeholder="Google Sheets CSV URL"/>
     <button class="btn btn-primary btn-sm" onclick="saveAndLoad()">연결</button>
     <span class="sync-status" id="sync-status"></span>
   </div>
 
-  <!-- Tabs -->
+  <div id="error-area"></div>
+
   <div class="tabs">
     <button class="tab active" onclick="switchTab('overview')">개요</button>
     <button class="tab" onclick="switchTab('rebal')">리밸런싱</button>
@@ -151,11 +140,10 @@
   <!-- 개요 -->
   <div id="tab-overview" class="tab-panel active">
     <div class="metrics" id="metrics"></div>
-    <!-- 계좌 필터 -->
     <div class="acct-pills" id="acct-pills"></div>
     <div class="two-col">
       <div class="card" style="margin-bottom:0">
-        <h2>자산 배분</h2>
+        <h2>계좌별 배분</h2>
         <div class="donut-wrap">
           <svg width="110" height="110" viewBox="0 0 100 100" id="donut"></svg>
           <div class="legend" id="legend"></div>
@@ -169,10 +157,12 @@
     <div style="margin-bottom:1.5rem"></div>
     <div class="card">
       <h2>보유 종목</h2>
-      <table>
-        <thead><tr><th>종목명</th><th>계좌</th><th>수량</th><th>평균단가</th><th>현재가</th><th>평가금액</th><th>수익률</th><th>손절선</th><th>추매선</th></tr></thead>
-        <tbody id="tbl"></tbody>
-      </table>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>종목명</th><th>계좌</th><th>수량</th><th>평균단가</th><th>현재가</th><th>평가금액</th><th>수익률</th><th>손절선</th><th>추매선</th></tr></thead>
+          <tbody id="tbl"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -230,9 +220,17 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <script>
-// ── 상수 & 유틸 ───────────────────────────────────────────────────
 const ACCT_COLORS = {'ISA':'#378ADD','IRP':'#7F77DD','연금저축':'#1D9E75','종합':'#BA7517','기타':'#888780'};
 const PALETTE = ['#1D9E75','#378ADD','#BA7517','#D4537E','#7F77DD','#888780','#E24B4A','#5DCAA5'];
+const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR0R0SVMgm1AdcXDMJaoL2L4NidViac6zT0Q0iujSWWgTPW0AOC8OSudOaPtj54ejeUtl6B24BRgvji/pub?gid=0&single=true&output=csv';
+
+// CORS 프록시 목록 — 순서대로 시도
+const PROXIES = [
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://cors-anywhere.herokuapp.com/${url}`,
+  url => url, // 마지막엔 직접 시도
+];
 
 function load(k,d){try{return JSON.parse(localStorage.getItem(k))??d;}catch{return d;}}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
@@ -240,18 +238,14 @@ function fmt(n){return Math.round(n).toLocaleString('ko-KR');}
 function fmtPct(n){return(n>=0?'+':'')+n.toFixed(2)+'%';}
 function isDark(){return matchMedia('(prefers-color-scheme:dark)').matches;}
 
-// ── 상태 ─────────────────────────────────────────────────────────
-let items     = [];   // {name, acct, qty, avgPrice, curPrice, val, ret, stop, buy}
+let items     = [];
 let targets   = load('pf_targets2', {});
 let snapshots = load('pf_snaps', []);
 let activeAcct = '전체';
 let histChart  = null;
 
-const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR0R0SVMgm1AdcXDMJaoL2L4NidViac6zT0Q0iujSWWgTPW0AOC8OSudOaPtj54ejeUtl6B24BRgvji/pub?gid=0&single=true&output=csv';
-
-// ── 초기화 ────────────────────────────────────────────────────────
 window.onload = () => {
-  const saved = load('pf_sheets_url', SHEETS_URL);
+  const saved = load('pf_sheets_url', DEFAULT_URL);
   document.getElementById('sheets-url').value = saved;
   loadSheets();
 };
@@ -263,29 +257,59 @@ function saveAndLoad() {
   loadSheets();
 }
 
-// ── Sheets CSV 로드 ───────────────────────────────────────────────
+// 여러 프록시를 순서대로 시도
+async function fetchWithFallback(targetUrl) {
+  for (let i = 0; i < PROXIES.length; i++) {
+    const proxyUrl = PROXIES[i](targetUrl);
+    try {
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text && text.length > 10) {
+        console.log(`프록시 ${i+1}번 성공`);
+        return text;
+      }
+    } catch(e) {
+      console.warn(`프록시 ${i+1}번 실패:`, e.message);
+    }
+  }
+  throw new Error('모든 프록시 실패');
+}
+
 async function loadSheets() {
   const url = document.getElementById('sheets-url').value.trim() || load('pf_sheets_url', '');
   if (!url) return;
 
   setStatus('loading', '불러오는 중...');
   document.getElementById('last-sync').textContent = '데이터 불러오는 중...';
-
-  // CORS 우회: allorigins 프록시 사용
-  const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  document.getElementById('error-area').innerHTML = '';
 
   try {
-    const res  = await fetch(proxy);
-    if (!res.ok) throw new Error('fetch 실패');
-    const text = await res.text();
-    parseCSV(text);
-    setStatus('ok', '✓ 연결됨');
+    const text = await fetchWithFallback(url);
+    const parsed = parseCSV(text);
+
+    if (!parsed || parsed.length === 0) {
+      throw new Error('데이터를 파싱할 수 없습니다. Sheets 컬럼 헤더를 확인해주세요.');
+    }
+
+    items = parsed;
+    setStatus('ok', `✓ ${items.length}개 종목 로드됨`);
     document.getElementById('last-sync').textContent =
-      '최종 업데이트: ' + new Date().toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      '최종 업데이트: ' + new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
     render();
+
   } catch(e) {
-    setStatus('err', '연결 실패 — URL 확인');
+    setStatus('err', '연결 실패');
     document.getElementById('last-sync').textContent = '데이터를 불러오지 못했습니다';
+    document.getElementById('error-area').innerHTML = `
+      <div class="error-box">
+        <strong>연결 실패</strong><br>
+        ${e.message}<br><br>
+        <strong>해결 방법:</strong><br>
+        1. Google Sheets → 파일 → 공유 → 웹에 게시가 되어 있는지 확인<br>
+        2. CSV 형식으로 게시했는지 확인 (output=csv 포함된 URL)<br>
+        3. 시트가 공개(Public)로 설정되어 있는지 확인
+      </div>`;
     console.error(e);
   }
 }
@@ -296,16 +320,14 @@ function setStatus(cls, msg) {
   el.textContent = msg;
 }
 
-// ── CSV 파싱 ──────────────────────────────────────────────────────
-// 예상 컬럼: 종목명, 티커, 수량, 평균단가, 현재가, 평가금액, 수익률%, 계좌, 손절선, 추매선
+// CSV 파싱 — 헤더명 자동 감지
 function parseCSV(text) {
-  const rows = text.trim().split('\n').map(r =>
-    r.split(',').map(c => c.trim().replace(/^"|"$/g, ''))
-  );
-  if (rows.length < 2) return;
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
 
-  const header = rows[0].map(h => h.toLowerCase());
-  const idx = (names) => {
+  const header = lines[0].split(',').map(c => c.trim().replace(/^"|"$/g,'').toLowerCase());
+
+  const idx = (...names) => {
     for (const n of names) {
       const i = header.findIndex(h => h.includes(n));
       if (i >= 0) return i;
@@ -313,150 +335,131 @@ function parseCSV(text) {
     return -1;
   };
 
-  const iName  = idx(['종목명','name']);
-  const iQty   = idx(['수량','qty']);
-  const iAvg   = idx(['평균단가','평균','avg']);
-  const iCur   = idx(['현재가','현재','cur','price']);
-  const iVal   = idx(['평가금액','평가','val']);
-  const iRet   = idx(['수익률','ret','return']);
-  const iAcct  = idx(['계좌','acct','account']);
-  const iStop  = idx(['손절','stop']);
-  const iBuy   = idx(['추매','buy']);
+  const iName  = idx('종목명','name');
+  const iQty   = idx('수량','qty');
+  const iAvg   = idx('평균단가','평균','avg');
+  const iCur   = idx('현재가','현재','cur','price');
+  const iVal   = idx('평가금액','평가','val');
+  const iRet   = idx('수익률','ret','return');
+  const iAcct  = idx('계좌','acct','account');
+  const iStop  = idx('손절');
+  const iBuy   = idx('추매');
 
-  items = [];
-  for (let i = 1; i < rows.length; i++) {
-    const r = rows[i];
-    if (!r[iName] || r[iName] === '') continue;
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const r = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g,''));
+    const name = iName >= 0 ? r[iName] : '';
+    if (!name) continue;
 
-    const name     = r[iName] || '';
-    const qty      = iQty  >= 0 ? parseFloat(r[iQty])  || 0 : 0;
-    const avgPrice = iAvg  >= 0 ? parseFloat(r[iAvg]?.replace(/,/g,''))  || 0 : 0;
-    const curPrice = iCur  >= 0 ? parseFloat(r[iCur]?.replace(/,/g,''))  || 0 : 0;
-    const acct     = iAcct >= 0 ? r[iAcct] : '기타';
+    const clean = s => parseFloat((s||'').replace(/,/g,'').replace(/%/g,'')) || 0;
+
+    const qty      = iQty  >= 0 ? clean(r[iQty])  : 0;
+    const avgPrice = iAvg  >= 0 ? clean(r[iAvg])  : 0;
+    const curPrice = iCur  >= 0 ? clean(r[iCur])  : 0;
+    const acct     = iAcct >= 0 ? (r[iAcct]||'기타') : '기타';
     const stop     = iStop >= 0 && r[iStop] !== '' ? parseFloat(r[iStop]) : null;
     const buy      = iBuy  >= 0 && r[iBuy]  !== '' ? parseFloat(r[iBuy])  : null;
 
-    // 평가금액: 직접 있으면 사용, 없으면 수량×현재가
-    let val = iVal >= 0 ? parseFloat(r[iVal]?.replace(/,/g,'')) || 0 : 0;
+    let val = iVal >= 0 ? clean(r[iVal]) : 0;
     if (!val && qty && curPrice) val = qty * curPrice;
 
-    // 수익률: 직접 있으면 사용, 없으면 계산
-    let ret = iRet >= 0 ? parseFloat(r[iRet]?.replace(/%/g,'')) || 0 : 0;
+    let ret = iRet >= 0 ? clean(r[iRet]) : 0;
     if (!ret && avgPrice && curPrice) ret = (curPrice - avgPrice) / avgPrice * 100;
 
-    items.push({name, acct, qty, avgPrice, curPrice, val, ret, stop, buy});
+    if (val > 0 || curPrice > 0) result.push({name, acct, qty, avgPrice, curPrice, val, ret, stop, buy});
   }
+  return result;
 }
 
-// ── 탭 전환 ───────────────────────────────────────────────────────
+// 탭 전환
 function switchTab(id) {
-  const ids = ['overview','rebal','alerts','history'];
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ids[i]===id));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
+  ['overview','rebal','alerts','history'].forEach((tid,i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', tid===id);
+    document.getElementById('tab-'+tid).classList.toggle('active', tid===id);
+  });
   if (id==='rebal')   renderRebal();
   if (id==='alerts')  renderAlerts();
   if (id==='history') renderHistory();
 }
 
-// ── 필터된 아이템 ─────────────────────────────────────────────────
-function filtered() {
-  return activeAcct === '전체' ? items : items.filter(it => it.acct === activeAcct);
-}
+function filtered() { return activeAcct==='전체' ? items : items.filter(it=>it.acct===activeAcct); }
+function setAcct(a) { activeAcct=a; render(); }
 
-// ── 알림 계산 ─────────────────────────────────────────────────────
 function getAlerts() {
-  const res = [];
-  // 리밸런싱 (전체 기준)
-  const total = items.reduce((s,i)=>s+i.val,0);
-  const nameMap = {};
-  items.forEach(it => { nameMap[it.name]=(nameMap[it.name]||0)+it.val; });
-  Object.entries(targets).forEach(([name, tgt]) => {
-    if (!tgt) return;
-    const cur = total > 0 ? (nameMap[name]||0)/total*100 : 0;
-    const diff = cur - tgt;
-    if (Math.abs(diff) >= 5) res.push({type:'rebal', name, cur, tgt, diff});
+  const res=[], total=items.reduce((s,i)=>s+i.val,0);
+  const nameMap={};
+  items.forEach(it=>{nameMap[it.name]=(nameMap[it.name]||0)+it.val;});
+  Object.entries(targets).forEach(([name,tgt])=>{
+    if(!tgt) return;
+    const cur=total>0?(nameMap[name]||0)/total*100:0, diff=cur-tgt;
+    if(Math.abs(diff)>=5) res.push({type:'rebal',name,cur,tgt,diff});
   });
-  // 손절/추매
-  items.forEach(it => {
-    if (it.stop != null && it.ret <= it.stop) res.push({type:'stop',name:it.name,ret:it.ret,line:it.stop});
-    else if (it.buy != null && it.ret <= it.buy) res.push({type:'buy',name:it.name,ret:it.ret,line:it.buy});
+  items.forEach(it=>{
+    if(it.stop!=null&&it.ret<=it.stop) res.push({type:'stop',name:it.name,ret:it.ret,line:it.stop});
+    else if(it.buy!=null&&it.ret<=it.buy) res.push({type:'buy',name:it.name,ret:it.ret,line:it.buy});
   });
   return res;
 }
 
-// ── 메인 렌더 ─────────────────────────────────────────────────────
 function render() {
-  const list  = filtered();
-  const total = list.reduce((s,i)=>s+i.val,0);
-  const gain  = list.reduce((s,i)=>s+i.val*i.ret/100/(1+i.ret/100)*i.ret/100,0); // approx
-  const totalCost = list.reduce((s,i)=>s+(i.avgPrice&&i.qty?i.avgPrice*i.qty:i.val/(1+i.ret/100)),0);
-  const retPct = totalCost > 0 ? (total-totalCost)/totalCost*100 : 0;
-  const alerts = getAlerts();
+  const list=filtered(), total=list.reduce((s,i)=>s+i.val,0);
+  const totalCost=list.reduce((s,i)=>s+(i.avgPrice&&i.qty?i.avgPrice*i.qty:i.val/(1+i.ret/100)),0);
+  const retPct=totalCost>0?(total-totalCost)/totalCost*100:0;
+  const alerts=getAlerts();
 
-  // Alert badge
-  const ab = document.getElementById('alert-badge');
-  ab.textContent = alerts.length || '';
-  ab.style.cssText = alerts.length
-    ? 'display:inline-block;background:var(--red);color:#fff;border-radius:10px;font-size:11px;padding:1px 6px;margin-left:4px' : '';
+  // badge
+  const ab=document.getElementById('alert-badge');
+  ab.textContent=alerts.length||'';
+  ab.style.cssText=alerts.length?'display:inline-block;background:var(--red);color:#fff;border-radius:10px;font-size:11px;padding:1px 6px;margin-left:4px':'';
 
-  // Metrics
-  document.getElementById('metrics').innerHTML = `
+  // metrics
+  document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="metric-label">총 평가금액</div><div class="metric-value">₩${fmt(total)}</div></div>
     <div class="metric"><div class="metric-label">평가손익</div><div class="metric-value ${total-totalCost>=0?'up':'down'}">${total-totalCost>=0?'+':''}₩${fmt(Math.abs(total-totalCost))}</div></div>
     <div class="metric"><div class="metric-label">수익률</div><div class="metric-value ${retPct>=0?'up':'down'}">${fmtPct(retPct)}</div></div>
     <div class="metric"><div class="metric-label">알림</div><div class="metric-value" style="color:${alerts.length?'var(--red)':'var(--text2)'}">${alerts.length}건</div></div>`;
 
-  // 계좌 필터 pills
-  const acctsAll = ['전체', ...new Set(items.map(i=>i.acct))];
-  document.getElementById('acct-pills').innerHTML = acctsAll.map(a =>
+  // acct pills
+  const acctsAll=['전체',...new Set(items.map(i=>i.acct))];
+  document.getElementById('acct-pills').innerHTML=acctsAll.map(a=>
     `<span class="acct-pill ${a===activeAcct?'active':''}" onclick="setAcct('${a}')">${a}</span>`
   ).join('');
 
-  // Table
-  const tbl = document.getElementById('tbl');
-  if (!list.length) {
-    tbl.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text2)">Sheets에서 데이터를 불러오는 중...</td></tr>';
-  } else {
-    tbl.innerHTML = list.map(it => {
-      const c = ACCT_COLORS[it.acct]||'#888';
-      const triggered_stop = it.stop!=null && it.ret<=it.stop;
-      const triggered_buy  = it.buy!=null  && it.ret<=it.buy && !triggered_stop;
-      const stopCell = it.stop!=null
-        ? `<span class="badge ${triggered_stop?'dn':''}" style="${triggered_stop?'':'background:var(--bg2);color:var(--text2)'}">${it.stop}%</span>`
-        : '<span style="color:var(--text2)">—</span>';
-      const buyCell = it.buy!=null
-        ? `<span class="badge ${triggered_buy?'info':''}" style="${triggered_buy?'':'background:var(--bg2);color:var(--text2)'}">${it.buy}%</span>`
-        : '<span style="color:var(--text2)">—</span>';
-      return `<tr>
-        <td style="font-weight:500">${it.name}</td>
-        <td><span style="background:${c}22;color:${c};padding:2px 8px;border-radius:4px;font-size:12px">${it.acct||'—'}</span></td>
-        <td>${it.qty||'—'}</td>
-        <td>${it.avgPrice?'₩'+fmt(it.avgPrice):'—'}</td>
-        <td>${it.curPrice?'₩'+fmt(it.curPrice):'—'}</td>
-        <td>₩${fmt(it.val)}</td>
-        <td><span class="badge ${it.ret>=0?'up':'dn'}">${fmtPct(it.ret)}</span></td>
-        <td>${stopCell}</td>
-        <td>${buyCell}</td>
-      </tr>`;
-    }).join('');
-  }
+  // table
+  const tbl=document.getElementById('tbl');
+  tbl.innerHTML=!list.length
+    ? '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text2)">종목 없음</td></tr>'
+    : list.map(it=>{
+        const c=ACCT_COLORS[it.acct]||'#888';
+        const ts=it.stop!=null&&it.ret<=it.stop, tb=it.buy!=null&&it.ret<=it.buy&&!ts;
+        const stopCell=it.stop!=null?`<span class="badge ${ts?'dn':''}" style="${ts?'':'background:var(--bg2);color:var(--text2)'}">${it.stop}%</span>`:'<span style="color:var(--text2)">—</span>';
+        const buyCell =it.buy!=null ?`<span class="badge ${tb?'info':''}" style="${tb?'':'background:var(--bg2);color:var(--text2)'}">${it.buy}%</span>` :'<span style="color:var(--text2)">—</span>';
+        return `<tr>
+          <td style="font-weight:500">${it.name}</td>
+          <td><span style="background:${c}22;color:${c};padding:2px 8px;border-radius:4px;font-size:12px">${it.acct}</span></td>
+          <td>${it.qty||'—'}</td>
+          <td>${it.avgPrice?'₩'+fmt(it.avgPrice):'—'}</td>
+          <td>${it.curPrice?'₩'+fmt(it.curPrice):'—'}</td>
+          <td>₩${fmt(it.val)}</td>
+          <td><span class="badge ${it.ret>=0?'up':'dn'}">${fmtPct(it.ret)}</span></td>
+          <td>${stopCell}</td><td>${buyCell}</td>
+        </tr>`;
+      }).join('');
 
-  // Donut (계좌별)
-  const acctMap = {};
-  list.forEach(it => { acctMap[it.acct]=(acctMap[it.acct]||0)+it.val; });
-  const entries = Object.entries(acctMap).sort((a,b)=>b[1]-a[1]);
-  const svg = document.getElementById('donut'), leg = document.getElementById('legend');
-  if (!total) { svg.innerHTML=''; leg.innerHTML=''; }
+  // donut (계좌별)
+  const acctMap={};
+  list.forEach(it=>{acctMap[it.acct]=(acctMap[it.acct]||0)+it.val;});
+  const entries=Object.entries(acctMap).sort((a,b)=>b[1]-a[1]);
+  const svg=document.getElementById('donut'), leg=document.getElementById('legend');
+  if(!total){svg.innerHTML='';leg.innerHTML='';}
   else {
-    let paths='', angle=-Math.PI/2;
-    entries.forEach(([acct,val]) => {
-      const a=val/total*Math.PI*2, cx=50,cy=50,r=40,ir=22;
+    let paths='',angle=-Math.PI/2;
+    entries.forEach(([acct,val])=>{
+      const a=val/total*Math.PI*2,cx=50,cy=50,r=40,ir=22,c=ACCT_COLORS[acct]||'#888';
       const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
       const x2=cx+r*Math.cos(angle+a),y2=cy+r*Math.sin(angle+a);
       const ix1=cx+ir*Math.cos(angle),iy1=cy+ir*Math.sin(angle);
       const ix2=cx+ir*Math.cos(angle+a),iy2=cy+ir*Math.sin(angle+a);
-      const c=ACCT_COLORS[acct]||'#888';
       paths+=`<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${a>Math.PI?1:0},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${ix2.toFixed(1)},${iy2.toFixed(1)} A${ir},${ir} 0 ${a>Math.PI?1:0},0 ${ix1.toFixed(1)},${iy1.toFixed(1)} Z" fill="${c}" opacity="0.85"/>`;
       angle+=a;
     });
@@ -469,16 +472,14 @@ function render() {
       </div>`).join('');
   }
 
-  // Bars (종목별)
-  const nameMap2 = {};
-  list.forEach(it=>{ nameMap2[it.name]=(nameMap2[it.name]||0)+it.val; });
-  const nameEntries = Object.entries(nameMap2).sort((a,b)=>b[1]-a[1]);
-  document.getElementById('bars').innerHTML = nameEntries.map(([name,val],i)=>{
-    const pct = total>0?val/total*100:0;
-    const tgt = targets[name]||0;
-    const c   = PALETTE[i%PALETTE.length];
+  // bars (종목별)
+  const nameMap={};
+  list.forEach(it=>{nameMap[it.name]=(nameMap[it.name]||0)+it.val;});
+  const nameEntries=Object.entries(nameMap).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('bars').innerHTML=nameEntries.map(([name,val],i)=>{
+    const pct=total>0?val/total*100:0, tgt=targets[name]||0, c=PALETTE[i%PALETTE.length];
     return `<div class="bar-row">
-      <span class="bar-label" title="${name}">${name.length>8?name.slice(0,8)+'…':name}</span>
+      <span class="bar-label" title="${name}">${name.length>9?name.slice(0,9)+'…':name}</span>
       <div class="bar-track">
         <div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${c}"></div>
         ${tgt?`<div class="bar-target" style="left:${Math.min(tgt,100)}%"></div>`:''}
@@ -488,29 +489,27 @@ function render() {
   }).join('');
 }
 
-function setAcct(a) { activeAcct=a; render(); }
-
-// ── 리밸런싱 ─────────────────────────────────────────────────────
+// 리밸런싱
 function renderRebal() {
-  const total   = items.reduce((s,i)=>s+i.val,0);
-  const nameMap = {};
-  items.forEach(it=>{ nameMap[it.name]=(nameMap[it.name]||0)+it.val; });
-  const names = Object.keys(nameMap);
+  const total=items.reduce((s,i)=>s+i.val,0);
+  const nameMap={};
+  items.forEach(it=>{nameMap[it.name]=(nameMap[it.name]||0)+it.val;});
+  const names=Object.keys(nameMap);
 
-  document.getElementById('target-form').innerHTML = names.map(name=>`
-    <div class="field">
-      <label style="font-size:11px">${name.length>12?name.slice(0,12)+'…':name}</label>
-      <input type="number" id="tgt-${btoa(name).replace(/=/g,'')}" min="0" max="100" step="1"
-        value="${targets[name]||0}" oninput="updateTargetSum()"/>
-    </div>`).join('');
+  document.getElementById('target-form').innerHTML=names.map(name=>{
+    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
+    return `<div class="field">
+      <label title="${name}">${name.length>14?name.slice(0,14)+'…':name}</label>
+      <input type="number" id="tgt_${key}" min="0" max="100" step="1" value="${targets[name]||0}" oninput="updateTargetSum()"/>
+    </div>`;
+  }).join('');
   updateTargetSum();
 
-  document.getElementById('rebal-tbl').innerHTML = names.map((name,i)=>{
-    const cur  = total>0?(nameMap[name]||0)/total*100:0;
-    const tgt  = targets[name]||0;
-    const diff = cur-tgt;
-    const adj  = diff/100*total;
-    const cls  = Math.abs(diff)>=5?(diff>0?'down':'up'):'';
+  document.getElementById('rebal-tbl').innerHTML=names.map(name=>{
+    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
+    const cur=total>0?(nameMap[name]||0)/total*100:0, tgt=targets[name]||0;
+    const diff=cur-tgt, adj=diff/100*total;
+    const cls=Math.abs(diff)>=5?(diff>0?'down':'up'):'';
     return `<tr>
       <td style="font-weight:500">${name}</td>
       <td>${cur.toFixed(1)}%</td>
@@ -522,38 +521,37 @@ function renderRebal() {
 }
 
 function updateTargetSum() {
-  const names = [...new Set(items.map(i=>i.name))];
-  const sum   = names.reduce((s,name)=>{
-    const id = 'tgt-'+btoa(name).replace(/=/g,'');
-    return s+(parseFloat(document.getElementById(id)?.value)||0);
+  const names=[...new Set(items.map(i=>i.name))];
+  const sum=names.reduce((s,name)=>{
+    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
+    return s+(parseFloat(document.getElementById('tgt_'+key)?.value)||0);
   },0);
-  const msg = document.getElementById('target-sum-msg');
-  msg.textContent = `합계: ${sum.toFixed(0)}% ${sum===100?'✓':sum>100?'(초과)':'(미만)'}`;
-  msg.style.color  = sum===100?'var(--green)':'var(--amber)';
+  const msg=document.getElementById('target-sum-msg');
+  msg.textContent=`합계: ${sum.toFixed(0)}% ${sum===100?'✓':sum>100?'(초과)':'(미만)'}`;
+  msg.style.color=sum===100?'var(--green)':'var(--amber)';
 }
 
 function saveTargets() {
-  const names = [...new Set(items.map(i=>i.name))];
-  const sum   = names.reduce((s,name)=>{
-    const id = 'tgt-'+btoa(name).replace(/=/g,'');
-    return s+(parseFloat(document.getElementById(id)?.value)||0);
+  const names=[...new Set(items.map(i=>i.name))];
+  const sum=names.reduce((s,name)=>{
+    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
+    return s+(parseFloat(document.getElementById('tgt_'+key)?.value)||0);
   },0);
-  if (Math.abs(sum-100)>0.5){alert('합계가 100%가 되도록 설정해주세요.');return;}
+  if(Math.abs(sum-100)>0.5){alert('합계가 100%가 되도록 설정해주세요.');return;}
   names.forEach(name=>{
-    const id = 'tgt-'+btoa(name).replace(/=/g,'');
-    targets[name]=parseFloat(document.getElementById(id)?.value)||0;
+    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
+    targets[name]=parseFloat(document.getElementById('tgt_'+key)?.value)||0;
   });
   save('pf_targets2',targets);
   render();
   alert('저장되었습니다.');
 }
 
-// ── 알림 ─────────────────────────────────────────────────────────
+// 알림
 function renderAlerts() {
-  const alerts = getAlerts();
-  const wrap   = document.getElementById('alerts-wrap');
-  const none   = document.getElementById('no-alerts');
-  if (!alerts.length){wrap.innerHTML='';none.style.display='block';return;}
+  const alerts=getAlerts();
+  const wrap=document.getElementById('alerts-wrap'), none=document.getElementById('no-alerts');
+  if(!alerts.length){wrap.innerHTML='';none.style.display='block';return;}
   none.style.display='none';
   wrap.innerHTML='<div class="alerts">'+alerts.map(a=>{
     if(a.type==='rebal') return `<div class="alert rebal"><span class="alert-icon">⚖️</span><div class="alert-body"><strong>${a.name} 리밸런싱 필요</strong>현재 ${a.cur.toFixed(1)}% → 목표 ${a.tgt}% (${a.diff>0?'+':''}${a.diff.toFixed(1)}%p 차이)</div></div>`;
@@ -562,14 +560,13 @@ function renderAlerts() {
   }).join('')+'</div>';
 }
 
-// ── 히스토리 ─────────────────────────────────────────────────────
+// 히스토리
 function saveSnapshot() {
-  const list  = items;
-  const total = list.reduce((s,i)=>s+i.val,0);
-  const cost  = list.reduce((s,i)=>s+(i.avgPrice&&i.qty?i.avgPrice*i.qty:i.val/(1+i.ret/100)),0);
-  const retPct= cost>0?(total-cost)/cost*100:0;
-  const memo  = document.getElementById('snap-memo').value.trim();
-  const date  = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
+  const total=items.reduce((s,i)=>s+i.val,0);
+  const cost=items.reduce((s,i)=>s+(i.avgPrice&&i.qty?i.avgPrice*i.qty:i.val/(1+i.ret/100)),0);
+  const retPct=cost>0?(total-cost)/cost*100:0;
+  const memo=document.getElementById('snap-memo').value.trim();
+  const date=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
   snapshots.push({date,total,retPct,memo});
   snapshots.sort((a,b)=>a.date.localeCompare(b.date));
   save('pf_snaps',snapshots);
@@ -578,13 +575,12 @@ function saveSnapshot() {
 }
 
 function delSnap(i){
-  if(!confirm('스냅샷을 삭제할까요?'))return;
+  if(!confirm('삭제할까요?'))return;
   snapshots.splice(i,1);save('pf_snaps',snapshots);renderHistory();
 }
 
-function renderHistory(){
-  const tbl=document.getElementById('snap-tbl');
-  const none=document.getElementById('no-snaps');
+function renderHistory() {
+  const tbl=document.getElementById('snap-tbl'), none=document.getElementById('no-snaps');
   none.style.display=snapshots.length?'none':'block';
   tbl.innerHTML=[...snapshots].reverse().map((s,ri)=>{
     const i=snapshots.length-1-ri;
@@ -609,7 +605,7 @@ function renderHistory(){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:11}}},
               y:{grid:{color:gc},ticks:{color:tc,font:{size:11},
-                callback:v=>'₩'+(v>=1e8?(v/1e8).toFixed(0)+'억':v>=1e4?(v/1e4).toFixed(0)+'만':fmt(v))}}}}
+                callback:v=>'₩'+(v>=1e8?(v/1e8).toFixed(1)+'억':v>=1e4?(v/1e4).toFixed(0)+'만':fmt(v))}}}}
   });
 }
 </script>
