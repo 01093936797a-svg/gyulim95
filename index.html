@@ -257,12 +257,18 @@ function saveAndLoad() {
   loadSheets();
 }
 
-// 여러 프록시를 순서대로 시도
+// 여러 프록시를 순서대로 시도 (타임스탬프로 캐시 무력화)
 async function fetchWithFallback(targetUrl) {
+  // 매 요청마다 다른 타임스탬프 → 프록시/브라우저 캐시 방지
+  const bustUrl = targetUrl + (targetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+
   for (let i = 0; i < PROXIES.length; i++) {
-    const proxyUrl = PROXIES[i](targetUrl);
+    const proxyUrl = PROXIES[i](bustUrl);
     try {
-      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+      const res = await fetch(proxyUrl, {
+        signal: AbortSignal.timeout(8000),
+        cache: 'no-store',
+      });
       if (!res.ok) continue;
       const text = await res.text();
       if (text && text.length > 10) {
