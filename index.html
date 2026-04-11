@@ -457,7 +457,7 @@ function parseCSV(text){
   const idx=(...ns)=>{for(const n of ns){const i=header.findIndex(h=>h.includes(n));if(i>=0)return i;}return -1;};
   const iName=idx('종목명','name'), iQty=idx('수량','qty'), iAvg=idx('평균단가','평균','avg');
   const iCur=idx('현재가','현재','cur','price'), iVal=idx('평가금액','평가','val');
-  const iRet=idx('수익률','ret'), iAcct=idx('계좌','acct'), iStop=idx('손절'), iBuy=idx('추매'), iType=idx('종류','type');
+  const iRet=idx('수익률','ret'), iAcct=idx('계좌','acct'), iStop=idx('손절'), iBuy=idx('추매'), iType=idx('종류','type'), iTicker=idx('티커','ticker');
   const result=[];
   for(let i=1;i<lines.length;i++){
     const r=lines[i].split(',').map(c=>c.trim().replace(/^"|"$/g,''));
@@ -468,11 +468,12 @@ function parseCSV(text){
     const stop=iStop>=0&&r[iStop]!==''?parseFloat(r[iStop]):null;
     const buy=iBuy>=0&&r[iBuy]!==''?parseFloat(r[iBuy]):null;
     const type=iType>=0?r[iType]:'';
+    const ticker=iTicker>=0?(r[iTicker]||''):'';  // 티커값, 없으면 빈 문자열
     let val=iVal>=0?clean(r[iVal]):0;
     if(!val&&qty&&curPrice) val=qty*curPrice;
     let ret=iRet>=0?clean(r[iRet]):0;
     if(!ret&&avgPrice&&curPrice) ret=(curPrice-avgPrice)/avgPrice*100;
-    if(val>0||curPrice>0) result.push({name,acct,qty,avgPrice,curPrice,val,ret,stop,buy,type});
+    if(val>0||curPrice>0) result.push({name,acct,qty,avgPrice,curPrice,val,ret,stop,buy,type,ticker:ticker||name});
   }
   return result;
 }
@@ -501,19 +502,31 @@ function getAlerts(){
   const nameMap={};
   investItems.forEach(it=>{nameMap[it.name]=(nameMap[it.name]||0)+it.val;});
 
-  // ETF 개별 리밸런싱
+  // ETF 리밸런싱 (티커 기준 합산)
+  const etfTickerMap={};
   investItems.filter(it=>isETF(it.name,it.type)).forEach(it=>{
-    const tgt=targets[it.name]||0; if(!tgt) return;
-    const cur=totalAll>0?(nameMap[it.name]||0)/totalAll*100:0;
-    const diff=cur-tgt;
-    if(Math.abs(diff)>=rebalThreshold) res.push({type:'rebal',name:it.name,cur,tgt,diff});
+    const k=it.ticker||it.name;
+    if(!etfTickerMap[k]) etfTickerMap[k]={name:it.name.replace(/\s*\([^)]*\)\s*$/,''),val:0};
+    etfTickerMap[k].val+=it.val;
   });
-  // 암호화폐 개별 리밸런싱
-  investItems.filter(it=>isCrypto(it.name,it.type)).forEach(it=>{
-    const tgt=targets[it.name]||0; if(!tgt) return;
-    const cur=totalAll>0?(nameMap[it.name]||0)/totalAll*100:0;
+  Object.entries(etfTickerMap).forEach(([ticker,g])=>{
+    const tgt=targets[ticker]||0; if(!tgt) return;
+    const cur=totalAll>0?g.val/totalAll*100:0;
     const diff=cur-tgt;
-    if(Math.abs(diff)>=rebalThreshold) res.push({type:'rebal',name:it.name,cur,tgt,diff});
+    if(Math.abs(diff)>=rebalThreshold) res.push({type:'rebal',name:g.name,cur,tgt,diff});
+  });
+  // 암호화폐 리밸런싱 (티커 기준 합산)
+  const cryptoTickerMap={};
+  investItems.filter(it=>isCrypto(it.name,it.type)).forEach(it=>{
+    const k=it.ticker||it.name;
+    if(!cryptoTickerMap[k]) cryptoTickerMap[k]={name:it.name.replace(/\s*\([^)]*\)\s*$/,''),val:0};
+    cryptoTickerMap[k].val+=it.val;
+  });
+  Object.entries(cryptoTickerMap).forEach(([ticker,g])=>{
+    const tgt=targets[ticker]||0; if(!tgt) return;
+    const cur=totalAll>0?g.val/totalAll*100:0;
+    const diff=cur-tgt;
+    if(Math.abs(diff)>=rebalThreshold) res.push({type:'rebal',name:g.name,cur,tgt,diff});
   });
   // 개별주 합산
   const stockTotal=investItems.filter(it=>isStock(it.name,it.type)).reduce((s,i)=>s+i.val,0);
@@ -722,21 +735,48 @@ function renderRebal(){
   const nameMap     = {};
   items.forEach(it=>{nameMap[it.name]=(nameMap[it.name]||0)+it.val;});
 
-  // ETF 폼
-  const etfNames=[...new Set(etfItems.map(i=>i.name))];
-  document.getElementById('target-form-etf').innerHTML=etfNames.map(name=>{
-    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
-    return `<div class="field"><label title="${name}">${name.length>14?name.slice(0,14)+'…':name}</label>
-      <input type="number" id="tgt_${key}" min="0" max="100" step="1" value="${targets[name]||0}" oninput="updateTargetSum()"/></div>`;
+  // ── 티커 기준으로 종목 그룹핑 ──
+  // 같은 티커의 종목은 계좌가 달라도 합산해서 하나로 표시
+  const groupByTicker = (arr) => {
+    const map = {};
+    arr.forEach(it => {
+      const key = it.ticker || it.name; // 티커 있으면 티커, 없으면 종목명
+      if (!map[key]) map[key] = { ticker: key, name: it.name.replace(/\s*\([^)]*\)\s*$/,''), items: [], val: 0, cost: 0 };
+      map[key].items.push(it);
+      map[key].val += it.val;
+      map[key].cost += it.avgPrice && it.qty ? it.avgPrice * it.qty : it.val / (1 + it.ret / 100);
+    });
+    return Object.values(map);
+  };
+
+  const etfGroups    = groupByTicker(etfItems);
+  const cryptoGroups = groupByTicker(cryptoItems);
+
+  // 티커 기준 nameMap (그룹 합산)
+  const tickerMap = {};
+  [...etfGroups, ...cryptoGroups].forEach(g => { tickerMap[g.ticker] = g.val; });
+
+  // ETF 폼 (티커 기준)
+  document.getElementById('target-form-etf').innerHTML=etfGroups.map(g=>{
+    const key=g.ticker.replace(/[^a-zA-Z0-9]/g,'_');
+    const label = g.name.length>14 ? g.name.slice(0,14)+'…' : g.name;
+    const accts = g.items.map(i=>i.acct).join(', ');
+    return `<div class="field">
+      <label title="${g.name} (${accts})">${label}<span style="display:block;font-size:11px;color:var(--text2)">${accts}</span></label>
+      <input type="number" id="tgt_${key}" min="0" max="100" step="1" value="${targets[g.ticker]||0}" oninput="updateTargetSum()"/>
+    </div>`;
   }).join('');
 
-  // 암호화폐 폼
-  const cryptoNames=[...new Set(cryptoItems.map(i=>i.name))];
-  document.getElementById('target-form-crypto').innerHTML=cryptoNames.length
-    ?cryptoNames.map(name=>{
-        const key=name.replace(/[^a-zA-Z0-9]/g,'_');
-        return `<div class="field"><label title="${name}">${name.length>14?name.slice(0,14)+'…':name}</label>
-          <input type="number" id="tgt_${key}" min="0" max="100" step="1" value="${targets[name]||0}" oninput="updateTargetSum()"/></div>`;
+  // 암호화폐 폼 (티커 기준)
+  document.getElementById('target-form-crypto').innerHTML=cryptoGroups.length
+    ?cryptoGroups.map(g=>{
+        const key=g.ticker.replace(/[^a-zA-Z0-9]/g,'_');
+        const label = g.name.length>14 ? g.name.slice(0,14)+'…' : g.name;
+        const accts = g.items.map(i=>i.acct).join(', ');
+        return `<div class="field">
+          <label title="${g.name} (${accts})">${label}<span style="display:block;font-size:11px;color:var(--text2)">${accts}</span></label>
+          <input type="number" id="tgt_${key}" min="0" max="100" step="1" value="${targets[g.ticker]||0}" oninput="updateTargetSum()"/>
+        </div>`;
       }).join('')
     :'<p style="font-size:13px;color:var(--text2)">보유 암호화폐 없음</p>';
 
@@ -745,14 +785,14 @@ function renderRebal(){
   updateTargetSum();
 
   // 리밸런싱 테이블 행 생성 헬퍼
-  const makeRow=(name,typeBadge,cur,tgt,adj)=>{
+  const makeRow=(name,typeBadge,cur,tgt,adj,subLabel)=>{
     const diff=cur-tgt;
     const cls=Math.abs(diff)>=rebalThreshold?(diff>0?'down':'up'):'';
     const status=!tgt?'':(Math.abs(diff)<rebalThreshold
       ?'<span class="badge" style="background:var(--green-bg);color:var(--green-dark)">균형</span>'
       :diff>0?'<span class="badge dn">비중 초과</span>':'<span class="badge info">비중 부족</span>');
     return `<tr>
-      <td style="font-weight:500">${name}</td>
+      <td style="font-weight:500">${name}${subLabel?`<br><span style="font-size:11px;color:var(--text2);font-weight:400">${subLabel}</span>`:''}}</td>
       <td>${typeBadge}</td>
       <td>${cur.toFixed(1)}%</td>
       <td>${tgt?tgt+'%':'미설정'}</td>
@@ -763,15 +803,18 @@ function renderRebal(){
   };
 
   const rows=[];
-  etfNames.forEach(name=>{
-    const cur=totalAll>0?(nameMap[name]||0)/totalAll*100:0;
-    const tgt=targets[name]||0;
-    rows.push(makeRow(name,'<span class="badge etf">ETF</span>',cur,tgt,(cur-tgt)/100*totalAll));
+  etfGroups.forEach(g=>{
+    const cur=totalAll>0?(tickerMap[g.ticker]||0)/totalAll*100:0;
+    const tgt=targets[g.ticker]||0;
+    // 계좌가 여러 개면 서브라벨로 표시
+    const subLabel = g.items.length>1 ? g.items.map(i=>`${i.acct} ₩${fmt(i.val)}`).join(' / ') : '';
+    rows.push(makeRow(g.name,'<span class="badge etf">ETF</span>',cur,tgt,(cur-tgt)/100*totalAll,subLabel));
   });
-  cryptoNames.forEach(name=>{
-    const cur=totalAll>0?(nameMap[name]||0)/totalAll*100:0;
-    const tgt=targets[name]||0;
-    rows.push(makeRow(name,'<span class="badge crypto">암호화폐</span>',cur,tgt,(cur-tgt)/100*totalAll));
+  cryptoGroups.forEach(g=>{
+    const cur=totalAll>0?(tickerMap[g.ticker]||0)/totalAll*100:0;
+    const tgt=targets[g.ticker]||0;
+    const subLabel = g.items.length>1 ? g.items.map(i=>`${i.acct} ₩${fmt(i.val)}`).join(' / ') : '';
+    rows.push(makeRow(g.name,'<span class="badge crypto">암호화폐</span>',cur,tgt,(cur-tgt)/100*totalAll,subLabel));
   });
   // 개별주 합산
   const stockTotal=stockItems.reduce((s,i)=>s+i.val,0);
@@ -806,11 +849,16 @@ function renderRebal(){
 
 function updateTargetSum(){
   const investItems=items.filter(it=>!isCash(it.name,it.type));
-  const etfNames=[...new Set(investItems.filter(it=>isETF(it.name,it.type)).map(i=>i.name))];
-  const cryptoNames=[...new Set(investItems.filter(it=>isCrypto(it.name,it.type)).map(i=>i.name))];
+  const groupByTicker2 = arr => {
+    const map={};
+    arr.forEach(it=>{ const k=it.ticker||it.name; if(!map[k]) map[k]=k; });
+    return Object.keys(map);
+  };
+  const etfTickers  = groupByTicker2(investItems.filter(it=>isETF(it.name,it.type)));
+  const cryptoTickers = groupByTicker2(investItems.filter(it=>isCrypto(it.name,it.type)));
   let sum=0;
-  [...etfNames,...cryptoNames].forEach(name=>{
-    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
+  [...etfTickers,...cryptoTickers].forEach(ticker=>{
+    const key=ticker.replace(/[^a-zA-Z0-9]/g,'_');
     sum+=parseFloat(document.getElementById('tgt_'+key)?.value)||0;
   });
   sum+=parseFloat(document.getElementById('tgt_STOCKS')?.value)||0;
@@ -822,19 +870,24 @@ function updateTargetSum(){
 
 function saveTargets(){
   const investItems=items.filter(it=>!isCash(it.name,it.type));
-  const etfNames=[...new Set(investItems.filter(it=>isETF(it.name,it.type)).map(i=>i.name))];
-  const cryptoNames=[...new Set(investItems.filter(it=>isCrypto(it.name,it.type)).map(i=>i.name))];
+  const groupByTicker3 = arr => {
+    const map={};
+    arr.forEach(it=>{ const k=it.ticker||it.name; if(!map[k]) map[k]=k; });
+    return Object.keys(map);
+  };
+  const etfTickers    = groupByTicker3(investItems.filter(it=>isETF(it.name,it.type)));
+  const cryptoTickers = groupByTicker3(investItems.filter(it=>isCrypto(it.name,it.type)));
   let sum=0;
-  [...etfNames,...cryptoNames].forEach(name=>{
-    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
+  [...etfTickers,...cryptoTickers].forEach(ticker=>{
+    const key=ticker.replace(/[^a-zA-Z0-9]/g,'_');
     sum+=parseFloat(document.getElementById('tgt_'+key)?.value)||0;
   });
   sum+=parseFloat(document.getElementById('tgt_STOCKS')?.value)||0;
   sum+=parseFloat(document.getElementById('tgt_CASH')?.value)||0;
   if(Math.abs(sum-100)>0.5){alert('합계가 100%가 되도록 설정해주세요.');return;}
-  [...etfNames,...cryptoNames].forEach(name=>{
-    const key=name.replace(/[^a-zA-Z0-9]/g,'_');
-    targets[name]=parseFloat(document.getElementById('tgt_'+key)?.value)||0;
+  [...etfTickers,...cryptoTickers].forEach(ticker=>{
+    const key=ticker.replace(/[^a-zA-Z0-9]/g,'_');
+    targets[ticker]=parseFloat(document.getElementById('tgt_'+key)?.value)||0;
   });
   targets['STOCKS']=parseFloat(document.getElementById('tgt_STOCKS')?.value)||0;
   targets['CASH']=parseFloat(document.getElementById('tgt_CASH')?.value)||0;
