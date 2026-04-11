@@ -392,7 +392,11 @@
 
     <!-- 보유 종목 -->
     <div class="card">
-      <div class="section-divider">ETF / 펀드</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <span style="font-size:14px;font-weight:500;color:var(--text2)">보유 종목</span>
+        <button class="btn btn-sm btn-primary" onclick="openItemModal()">+ 종목 추가</button>
+      </div>
+      <div class="section-divider" style="margin-top:0">ETF / 펀드</div>
       <div style="overflow-x:auto">
         <table>
           <thead><tr><th>종목명</th><th>종류</th><th>계좌</th><th>수량</th><th>평균단가</th><th>현재가</th><th>평가금액</th><th>수익률</th><th>리밸런싱</th></tr></thead>
@@ -565,6 +569,44 @@
   </div>
 </div>
 
+<!-- 종목 추가/수정 모달 -->
+<div class="modal-overlay" id="item-modal-overlay" onclick="closeItemModal(event)" style="display:none;align-items:center;justify-content:center">
+  <div class="modal" style="border-radius:var(--radius-lg);max-height:90vh;max-width:480px">
+    <div class="modal-header">
+      <h3 id="item-modal-title">종목 추가</h3>
+      <button class="modal-close" onclick="closeItemModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:1.25rem">
+      <input type="hidden" id="item-edit-idx" value="-1"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="sim-field" style="grid-column:1/-1"><label>종목명</label><input id="item-name" placeholder="예: TIME 미국S&P500액티브"/></div>
+        <div class="sim-field"><label>티커 (선택)</label><input id="item-ticker" placeholder="예: KRX:381170"/></div>
+        <div class="sim-field"><label>종류</label>
+          <select id="item-type" style="width:100%;padding:7px 10px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none">
+            <option value="ETF">ETF</option>
+            <option value="개별주">개별주</option>
+            <option value="암호화폐">암호화폐</option>
+          </select>
+        </div>
+        <div class="sim-field"><label>계좌</label>
+          <select id="item-acct" style="width:100%;padding:7px 10px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none">
+            <option>ISA</option><option>IRP</option><option>연금저축</option><option>종합</option><option>기타</option>
+          </select>
+        </div>
+        <div class="sim-field"><label>수량</label><input type="number" id="item-qty" placeholder="52"/></div>
+        <div class="sim-field"><label>평균단가 (원)</label><input type="number" id="item-avg" placeholder="28551"/></div>
+        <div class="sim-field"><label>손절선 (%)</label><input type="number" id="item-stop" placeholder="-15" step="0.1"/></div>
+        <div class="sim-field"><label>추매선 (%)</label><input type="number" id="item-buy-line" placeholder="-8" step="0.1"/></div>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-top:12px">현재가는 Google Sheets GOOGLEFINANCE가 자동으로 업데이트해요.</p>
+      <div style="display:flex;gap:8px;margin-top:1.25rem">
+        <button class="btn" style="flex:1" onclick="closeItemModal()">취소</button>
+        <button class="btn btn-primary" style="flex:2" onclick="saveItem()">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- FAB -->
 <button class="fab" id="fab" onclick="openAdvisor()" title="AI 투자 조언">✦</button>
 
@@ -593,6 +635,7 @@
 const ACCT_COLORS = {'ISA':'#378ADD','IRP':'#7F77DD','연금저축':'#1D9E75','종합':'#BA7517','기타':'#888780'};
 const PALETTE = ['#1D9E75','#378ADD','#BA7517','#D4537E','#7F77DD','#888780','#E24B4A','#5DCAA5'];
 const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR0R0SVMgm1AdcXDMJaoL2L4NidViac6zT0Q0iujSWWgTPW0AOC8OSudOaPtj54ejeUtl6B24BRgvji/pub?gid=0&single=true&output=csv';
+const API_BASE   = 'https://portfolio-api-nu-five.vercel.app';
 const PROXIES = [
   url=>`https://corsproxy.io/?${encodeURIComponent(url)}`,
   url=>`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -618,11 +661,13 @@ function isDark(){return matchMedia('(prefers-color-scheme:dark)').matches;}
 
 // ── 상태 ──────────────────────────────────────────────────────────
 let items      = [];
-let targets    = load('pf_targets4', {});
-let snapshots  = load('pf_snaps', []);
+let targets    = {};
+let snapshots  = [];
+let sheetsUrl  = '';
 let activeAcct = '전체';
 let histChart  = null;
 let rebalThreshold = parseInt(localStorage.getItem('rebal_threshold')||'5');
+let _saving    = false;  // 저장 중복 방지
 
 // ── 초기화 ────────────────────────────────────────────────────────
 window.onload = () => {
@@ -677,7 +722,7 @@ function showLoginError(msg) {
 function showApp(name) {
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('user-name').textContent = name;
-  loadSheets();
+  loadDB();
 }
 
 function doLogout() {
@@ -685,6 +730,147 @@ function doLogout() {
   localStorage.removeItem('pf_token');
   localStorage.removeItem('pf_user');
   location.reload();
+}
+
+// ── 종목 추가/수정/삭제 ───────────────────────────────────────────
+function openItemModal() {
+  document.getElementById('item-modal-title').textContent = '종목 추가';
+  document.getElementById('item-edit-idx').value = '-1';
+  document.getElementById('item-name').value    = '';
+  document.getElementById('item-ticker').value  = '';
+  document.getElementById('item-qty').value     = '';
+  document.getElementById('item-avg').value     = '';
+  document.getElementById('item-stop').value    = '';
+  document.getElementById('item-buy-line').value= '';
+  document.getElementById('item-type').value    = 'ETF';
+  document.getElementById('item-acct').value    = 'ISA';
+  const overlay = document.getElementById('item-modal-overlay');
+  overlay.style.display = 'flex';
+}
+
+function openEditModal(idx) {
+  const it = items[idx];
+  if (!it) return;
+  document.getElementById('item-modal-title').textContent = '종목 수정';
+  document.getElementById('item-edit-idx').value  = idx;
+  document.getElementById('item-name').value      = it.name || '';
+  document.getElementById('item-ticker').value    = it.ticker !== it.name ? (it.ticker||'') : '';
+  document.getElementById('item-qty').value       = it.qty || '';
+  document.getElementById('item-avg').value       = it.avgPrice || '';
+  document.getElementById('item-stop').value      = it.stop ?? '';
+  document.getElementById('item-buy-line').value  = it.buy ?? '';
+  document.getElementById('item-type').value      = it.type || 'ETF';
+  document.getElementById('item-acct').value      = it.acct || 'ISA';
+  document.getElementById('item-modal-overlay').style.display = 'flex';
+}
+
+function closeItemModal(e) {
+  if (!e || e.target === document.getElementById('item-modal-overlay')) {
+    document.getElementById('item-modal-overlay').style.display = 'none';
+  }
+}
+
+function saveItem() {
+  const idx     = parseInt(document.getElementById('item-edit-idx').value);
+  const name    = document.getElementById('item-name').value.trim();
+  const ticker  = document.getElementById('item-ticker').value.trim();
+  const qty     = parseFloat(document.getElementById('item-qty').value) || 0;
+  const avg     = parseFloat(document.getElementById('item-avg').value) || 0;
+  const stopVal = document.getElementById('item-stop').value;
+  const buyVal  = document.getElementById('item-buy-line').value;
+  const type    = document.getElementById('item-type').value;
+  const acct    = document.getElementById('item-acct').value;
+
+  if (!name) { alert('종목명을 입력해주세요'); return; }
+
+  const newItem = {
+    name, type, acct, qty,
+    avgPrice: avg,
+    ticker: ticker || name,
+    stop: stopVal !== '' ? parseFloat(stopVal) : null,
+    buy:  buyVal  !== '' ? parseFloat(buyVal)  : null,
+    // 현재가·평가금액·수익률은 Sheets에서 채워짐, 일단 0으로
+    curPrice: 0, val: avg * qty, ret: 0
+  };
+
+  if (idx >= 0 && idx < items.length) {
+    // 수정: Sheets에서 가져온 현재가·수익률 유지
+    newItem.curPrice = items[idx].curPrice || 0;
+    newItem.val      = items[idx].curPrice ? items[idx].curPrice * qty : avg * qty;
+    newItem.ret      = items[idx].ret || 0;
+    items[idx] = newItem;
+  } else {
+    // 추가
+    items.push(newItem);
+  }
+
+  closeItemModal();
+  autoSave();
+  render();
+  // Sheets에서 현재가 재로드
+  const url = document.getElementById('sheets-url').value.trim() || sheetsUrl;
+  if (url) loadSheets(url);
+}
+
+function deleteItem(idx) {
+  if (!confirm(`"${items[idx]?.name}"을(를) 삭제할까요?`)) return;
+  items.splice(idx, 1);
+  autoSave();
+  render();
+}
+
+// ── DB 저장/불러오기 ─────────────────────────────────────────────
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + (localStorage.getItem('pf_token')||'')
+  };
+}
+
+async function loadDB() {
+  try {
+    const res  = await fetch(API_BASE + '/api/portfolio', { headers: authHeaders() });
+    if (res.status === 401) { doLogout(); return; }
+    const data = await res.json();
+    items     = data.items     || [];
+    targets   = data.targets   || {};
+    snapshots = data.snapshots || [];
+    sheetsUrl = data.sheetsUrl || DEFAULT_URL;
+    rebalThreshold = data.rebalThreshold || 5;
+
+    // Sheets URL 입력란 업데이트
+    const urlEl = document.getElementById('sheets-url');
+    if (urlEl && sheetsUrl) urlEl.value = sheetsUrl;
+
+    // Sheets에서 현재가 로드
+    if (sheetsUrl) await loadSheets(sheetsUrl);
+    else render();
+  } catch(e) {
+    console.error('DB 로드 실패:', e);
+    render();
+  }
+}
+
+async function saveDB() {
+  if (_saving) return;
+  _saving = true;
+  try {
+    const urlEl = document.getElementById('sheets-url');
+    if (urlEl) sheetsUrl = urlEl.value.trim() || sheetsUrl;
+    await fetch(API_BASE + '/api/portfolio', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ items, targets, snapshots, sheetsUrl, rebalThreshold })
+    });
+  } catch(e) { console.error('DB 저장 실패:', e); }
+  _saving = false;
+}
+
+// 자동저장 (디바운스 1초)
+let _saveTimer = null;
+function autoSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveDB, 1000);
 }
 
 function toggleSync() {
@@ -769,8 +955,8 @@ async function fetchWithFallback(targetUrl) {
   throw new Error('모든 프록시 실패');
 }
 
-async function loadSheets() {
-  const url = document.getElementById('sheets-url').value.trim() || load('pf_sheets_url','');
+async function loadSheets(urlParam) {
+  const url = urlParam || document.getElementById('sheets-url').value.trim() || sheetsUrl || DEFAULT_URL;
   if(!url) return;
   setStatus('loading','불러오는 중...');
   document.getElementById('error-area').innerHTML='';
@@ -987,8 +1173,10 @@ function render(){
         <td>₩${fmt(it.val)}</td>
         <td><span class="badge ${it.ret>=0?'up':'dn'}">${fmtPct(it.ret)}</span></td>
         <td>${rebalBadge(it.name,totalAll)}</td>
+        <td><button class="btn-del" onclick="openEditModal(${items.indexOf(it)})" title="수정">✎</button>
+            <button class="btn-del" onclick="deleteItem(${items.indexOf(it)})" title="삭제">✕</button></td>
       </tr>`).join('')
-    :'<tr><td colspan="9" style="text-align:center;padding:1rem;color:var(--text2)">없음</td></tr>';
+    :'<tr><td colspan="10" style="text-align:center;padding:1rem;color:var(--text2)">없음</td></tr>';
 
   // 암호화폐 테이블
   document.getElementById('tbl-crypto').innerHTML=cryptoList.length
@@ -1002,8 +1190,10 @@ function render(){
         <td>₩${fmt(it.val)}</td>
         <td><span class="badge ${it.ret>=0?'up':'dn'}">${fmtPct(it.ret)}</span></td>
         <td>${rebalBadge(it.name,totalAll)}</td>
+        <td><button class="btn-del" onclick="openEditModal(${items.indexOf(it)})" title="수정">✎</button>
+            <button class="btn-del" onclick="deleteItem(${items.indexOf(it)})" title="삭제">✕</button></td>
       </tr>`).join('')
-    :'<tr><td colspan="9" style="text-align:center;padding:1rem;color:var(--text2)">없음</td></tr>';
+    :'<tr><td colspan="10" style="text-align:center;padding:1rem;color:var(--text2)">없음</td></tr>';
 
   // 개별주 테이블
   document.getElementById('tbl-stock').innerHTML=stockList.length
@@ -1023,9 +1213,11 @@ function render(){
           <td>₩${fmt(it.val)}</td>
           <td><span class="badge ${it.ret>=0?'up':'dn'}">${fmtPct(it.ret)}</span></td>
           <td>${note}</td>
+          <td><button class="btn-del" onclick="openEditModal(${items.indexOf(it)})" title="수정">✎</button>
+              <button class="btn-del" onclick="deleteItem(${items.indexOf(it)})" title="삭제">✕</button></td>
         </tr>`;
       }).join('')
-    :'<tr><td colspan="9" style="text-align:center;padding:1rem;color:var(--text2)">없음</td></tr>';
+    :'<tr><td colspan="10" style="text-align:center;padding:1rem;color:var(--text2)">없음</td></tr>';
 
   // Donut
   const acctMap2={};
@@ -1068,6 +1260,8 @@ function render(){
 
   // 데이터 로드 후 점수 계산
   calcScore();
+  // 자동저장 (targets 등 변경 반영)
+  autoSave();
 }
 
 // ── 포트폴리오 점수 계산 ──────────────────────────────────────────────
@@ -1373,7 +1567,7 @@ function saveTargets(){
   });
   targets['STOCKS']=parseFloat(document.getElementById('tgt_STOCKS')?.value)||0;
   targets['CASH']=parseFloat(document.getElementById('tgt_CASH')?.value)||0;
-  save('pf_targets4',targets);
+  autoSave();
   render();
   alert('저장되었습니다.');
 }
@@ -1381,6 +1575,7 @@ function saveTargets(){
 function updateThreshold(v){
   rebalThreshold=parseInt(v);
   localStorage.setItem('rebal_threshold',v);
+  autoSave();
   document.getElementById('threshold-label').textContent='±'+v+'%p 이상';
   renderRebal();render();
 }
@@ -1642,12 +1837,12 @@ function saveSnapshot(){
   const date=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'});
   snapshots.push({date,total,retPct,memo});
   snapshots.sort((a,b)=>a.date.localeCompare(b.date));
-  save('pf_snaps',snapshots);
+  autoSave();
   document.getElementById('snap-memo').value='';
   renderHistory();
 }
 
-function delSnap(i){if(!confirm('삭제할까요?'))return;snapshots.splice(i,1);save('pf_snaps',snapshots);renderHistory();}
+function delSnap(i){if(!confirm('삭제할까요?'))return;snapshots.splice(i,1);autoSave();renderHistory();}
 
 function renderHistory(){
   const tbl=document.getElementById('snap-tbl'),none=document.getElementById('no-snaps');
