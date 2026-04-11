@@ -201,7 +201,35 @@
     .matrix-table td.highlight{background:var(--blue-bg);color:var(--blue-dark);font-weight:500}
     .sim-chart-wrap{position:relative;height:200px;margin-top:8px}
 
+    /* 포트폴리오 점수 카드 */
+    .score-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem;cursor:pointer;transition:border-color .15s}
+    .score-card:hover{border-color:var(--border2)}
+    .score-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+    .score-title{font-size:13px;font-weight:500;color:var(--text2)}
+    .score-total{display:flex;align-items:baseline;gap:6px}
+    .score-total-num{font-size:32px;font-weight:500;letter-spacing:-1px}
+    .score-total-den{font-size:14px;color:var(--text2)}
+    .score-grade{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;margin-left:8px}
+    .score-items{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem}
+    .score-item{background:var(--bg2);border-radius:var(--radius);padding:12px;cursor:pointer;transition:background .15s;position:relative;overflow:hidden}
+    .score-item:hover{background:var(--bg3)}
+    .score-item-label{font-size:11px;color:var(--text2);margin-bottom:8px}
+    .score-item-num{font-size:22px;font-weight:500;margin-bottom:6px}
+    .score-item-bar{height:3px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:6px}
+    .score-item-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+    .score-item-comment{font-size:11px;color:var(--text2);line-height:1.4}
+    .score-detail{display:none;padding-top:1rem;border-top:0.5px solid var(--border);margin-top:0.5rem}
+    .score-detail.open{display:block}
+    .score-detail-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;line-height:1.5}
+    .score-detail-item:last-child{border-bottom:none}
+    .score-loading{display:flex;align-items:center;gap:10px;padding:1rem 0;font-size:13px;color:var(--text2)}
+    .score-refresh{background:none;border:none;cursor:pointer;color:var(--text2);font-size:12px;padding:2px 6px;border-radius:4px}
+    .score-refresh:hover{background:var(--bg2);color:var(--text)}
+    @keyframes score-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    .score-animate{animation:score-in .35s ease forwards}
+
     @media(max-width:700px){
+      .score-items{grid-template-columns:repeat(2,1fr)}
       .hero-bottom{grid-template-columns:1fr 1fr}
       .hero-right{gap:16px}
       .two-col{grid-template-columns:1fr}
@@ -276,6 +304,27 @@
 
   <!-- 개요 -->
   <div id="tab-overview" class="tab-panel active">
+    <!-- 포트폴리오 점수 카드 -->
+    <div class="score-card" id="score-card" onclick="toggleScoreDetail()">
+      <div class="score-header">
+        <div>
+          <div class="score-title">포트폴리오 점수</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px" id="score-updated"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="score-total">
+            <span class="score-total-num" id="score-total-num">—</span>
+            <span class="score-total-den">/100</span>
+            <span class="score-grade" id="score-grade"></span>
+          </div>
+          <button class="score-refresh" onclick="event.stopPropagation();calcScore()" title="점수 새로고침">↻</button>
+        </div>
+      </div>
+      <div class="score-items" id="score-items">
+        <div class="score-loading"><div class="ai-spinner" style="width:16px;height:16px;border-width:1.5px"></div>점수 계산 중...</div>
+      </div>
+      <div class="score-detail" id="score-detail"></div>
+    </div>
     <div class="acct-pills" id="acct-pills"></div>
     <div class="two-col">
       <div class="card" style="margin-bottom:0">
@@ -918,6 +967,138 @@ function render(){
         ${tgt?`<div class="bar-target" style="left:${Math.min(tgt,100)}%"></div>`:''}
       </div>
       <span class="bar-val">${pct.toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+
+  // 데이터 로드 후 점수 계산
+  calcScore();
+}
+
+// ── 포트폴리오 점수 계산 ──────────────────────────────────────────────
+let scoreData = null;
+let scoreOpen = false;
+
+function toggleScoreDetail() {
+  scoreOpen = !scoreOpen;
+  const detail = document.getElementById('score-detail');
+  if (detail) detail.classList.toggle('open', scoreOpen);
+}
+
+function getScoreColor(score) {
+  if (score >= 80) return '#1D9E75';
+  if (score >= 60) return '#BA7517';
+  return '#E24B4A';
+}
+
+function getGrade(total) {
+  if (total >= 90) return { label:'S', bg:'#EEEDFE', color:'#3C3489' };
+  if (total >= 80) return { label:'A', bg:'#E1F5EE', color:'#085041' };
+  if (total >= 70) return { label:'B', bg:'#E6F1FB', color:'#0C447C' };
+  if (total >= 60) return { label:'C', bg:'#FAEEDA', color:'#633806' };
+  return { label:'D', bg:'#FCEBEB', color:'#791F1F' };
+}
+
+async function calcScore() {
+  const investItems = items.filter(it=>!isCash(it.name,it.type));
+  const cashItems   = items.filter(it=>isCash(it.name,it.type));
+  if (!investItems.length) return;
+
+  const totalInvest = investItems.reduce((s,i)=>s+i.val,0);
+  const totalCash   = cashItems.reduce((s,i)=>s+i.val,0);
+  const totalAll    = totalInvest + totalCash;
+  const totalCost   = investItems.reduce((s,i)=>s+(i.avgPrice&&i.qty?i.avgPrice*i.qty:i.val/(1+i.ret/100)),0);
+  const retPct      = totalCost>0?(totalInvest-totalCost)/totalCost*100:0;
+  const cashPct     = totalAll>0?totalCash/totalAll*100:0;
+
+  // 티커 기준 합산
+  const tickerMap = {};
+  investItems.forEach(it=>{
+    const k = it.name.replace(/\s*\([^)]*\)\s*$/,'');
+    if(!tickerMap[k]) tickerMap[k]={name:k,val:0,type:it.type};
+    tickerMap[k].val += it.val;
+  });
+  const groups = Object.values(tickerMap);
+  const topWeight = groups.length>0 ? Math.max(...groups.map(g=>g.val/totalInvest*100)) : 0;
+  const etfPct    = groups.filter(g=>isETF(g.name,g.type)).reduce((s,g)=>s+g.val,0)/totalInvest*100;
+  const stockPct  = groups.filter(g=>isStock(g.name,g.type)).reduce((s,g)=>s+g.val,0)/totalInvest*100;
+
+  const prompt = `포트폴리오 분석가입니다. 아래 포트폴리오를 4가지 항목으로 채점해주세요.
+
+포트폴리오:
+- 보유 종목 수: ${groups.length}개
+- 상위 종목 비중: ${topWeight.toFixed(1)}%
+- ETF 비중: ${etfPct.toFixed(1)}% / 개별주 비중: ${stockPct.toFixed(1)}%
+- 전체 수익률: ${fmtPct(retPct)}
+- 예수금 비중: ${cashPct.toFixed(1)}%
+- 보유 종목: ${groups.map(g=>`${g.name}(${(g.val/totalInvest*100).toFixed(1)}%)`).join(', ')}
+
+각 항목을 0~25점으로 채점하고 JSON으로만 응답하세요. 다른 텍스트 없이 JSON만:
+{
+  "scores": [
+    {"key":"diversity","label":"분산도","score":숫자,"comment":"15자 이내 코멘트","detail":"2~3문장 상세 설명"},
+    {"key":"return","label":"수익률","score":숫자,"comment":"15자 이내 코멘트","detail":"2~3문장 상세 설명"},
+    {"key":"risk","label":"리스크","score":숫자,"comment":"15자 이내 코멘트","detail":"2~3문장 상세 설명"},
+    {"key":"cash","label":"현금비중","score":숫자,"comment":"15자 이내 코멘트","detail":"2~3문장 상세 설명"}
+  ]
+}`;
+
+  // 로딩 표시
+  document.getElementById('score-items').innerHTML =
+    '<div class="score-loading"><div class="ai-spinner" style="width:16px;height:16px;border-width:1.5px"></div>AI가 점수 계산 중...</div>';
+  document.getElementById('score-total-num').textContent = '—';
+  document.getElementById('score-grade').textContent = '';
+
+  try {
+    const res = await fetch('https://portfolio-api-nu-five.vercel.app/api/advice', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({prompt})
+    });
+    const data = await res.json();
+    const jsonMatch = (data.text||'').match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('파싱 실패');
+    scoreData = JSON.parse(jsonMatch[0]);
+    renderScore();
+  } catch(e) {
+    document.getElementById('score-items').innerHTML =
+      `<div style="font-size:13px;color:var(--text2);padding:8px 0">점수를 불러오지 못했습니다. <button class="score-refresh" onclick="calcScore()">다시 시도</button></div>`;
+  }
+}
+
+function renderScore() {
+  if (!scoreData) return;
+  const scores = scoreData.scores || [];
+  const total  = scores.reduce((s,i)=>s+i.score,0);
+  const grade  = getGrade(total);
+
+  // 총점
+  const totalEl = document.getElementById('score-total-num');
+  totalEl.textContent = total;
+  totalEl.style.color = getScoreColor(total);
+  const gradeEl = document.getElementById('score-grade');
+  gradeEl.textContent = grade.label;
+  gradeEl.style.background = grade.bg;
+  gradeEl.style.color = grade.color;
+  document.getElementById('score-updated').textContent =
+    new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) + ' 기준';
+
+  // 항목 카드
+  document.getElementById('score-items').innerHTML = scores.map((s,i) => {
+    const pct = s.score / 25 * 100;
+    const c   = getScoreColor(s.score);
+    return `<div class="score-item score-animate" style="animation-delay:${i*0.07}s" onclick="event.stopPropagation();toggleScoreDetail()">
+      <div class="score-item-label">${s.label}</div>
+      <div class="score-item-num" style="color:${c}">${s.score}<span style="font-size:13px;color:var(--text2);font-weight:400">/25</span></div>
+      <div class="score-item-bar"><div class="score-item-fill" style="width:${pct}%;background:${c}"></div></div>
+      <div class="score-item-comment">${s.comment||''}</div>
+    </div>`;
+  }).join('');
+
+  // 상세 내용
+  document.getElementById('score-detail').innerHTML = scores.map(s => {
+    const c = getScoreColor(s.score);
+    return `<div class="score-detail-item">
+      <div style="min-width:60px;font-size:12px;font-weight:500;color:${c}">${s.label} ${s.score}점</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6">${s.detail||''}</div>
     </div>`;
   }).join('');
 }
