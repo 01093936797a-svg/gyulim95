@@ -148,30 +148,95 @@
     .ai-loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;gap:12px;color:var(--text2);font-size:13px}
     .ai-spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite}
 
+    /* 알림 아이콘 */
+    .notif-btn{position:relative;background:none;border:none;cursor:pointer;padding:6px;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius)}
+    .notif-btn:hover{background:var(--bg2);color:var(--text)}
+    .notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--red);display:none}
+    .notif-dot.show{display:block}
+    .notif-count{position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:10px;font-weight:500;display:none;align-items:center;justify-content:center;padding:0 4px}
+    .notif-count.show{display:flex}
+
+    /* 알림 모달 */
+    .notif-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;display:none;align-items:flex-start;justify-content:flex-end;padding:60px 1rem 0}
+    .notif-overlay.open{display:flex}
+    .notif-panel{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);width:100%;max-width:360px;max-height:70vh;display:flex;flex-direction:column;overflow:hidden}
+    .notif-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--border);flex-shrink:0}
+    .notif-header h3{font-size:14px;font-weight:500}
+    .notif-list{overflow-y:auto;padding:8px}
+    .notif-item{display:flex;gap:10px;padding:10px 8px;border-radius:var(--radius);font-size:13px;line-height:1.5;margin-bottom:4px}
+    .notif-item.warn{background:var(--amber-bg);color:var(--amber-dark)}
+    .notif-item.danger{background:var(--red-bg);color:var(--red-dark)}
+    .notif-item.info{background:var(--blue-bg);color:var(--blue-dark)}
+    .notif-item.success{background:var(--green-bg);color:var(--green-dark)}
+    .notif-item-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+    .notif-item-body strong{display:block;font-weight:500;margin-bottom:1px}
+    .notif-empty{text-align:center;padding:2rem;font-size:13px;color:var(--text2)}
+
+    /* 헤더 영역 */
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+    .page-header-left{display:flex;align-items:center;gap:8px}
+
+    /* AI 비중 추천 */
+    .tendency-pills{display:flex;gap:8px;margin-bottom:1rem}
+    .tendency-pill{padding:6px 16px;border-radius:20px;font-size:13px;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);transition:all .15s}
+    .tendency-pill.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+    .ai-rebal-result{background:var(--bg2);border-radius:var(--radius);padding:12px 14px;margin-top:1rem;font-size:13px;line-height:1.7;display:none}
+    .ai-rebal-result.show{display:block}
+
+    /* 목표 시뮬레이터 */
+    .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
+    .sim-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
+    .sim-field input{width:100%;padding:7px 10px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+    .sim-result{background:var(--bg2);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem}
+    .sim-result-main{font-size:28px;font-weight:500;margin-bottom:4px}
+    .sim-result-sub{font-size:13px;color:var(--text2)}
+    .sim-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:1rem}
+    .sim-metric{background:var(--bg);border-radius:var(--radius);padding:10px 12px}
+    .sim-metric-label{font-size:11px;color:var(--text2);margin-bottom:4px}
+    .sim-metric-val{font-size:15px;font-weight:500}
+    .matrix-wrap{overflow-x:auto}
+    .matrix-table{width:100%;border-collapse:collapse;font-size:12px}
+    .matrix-table th{background:var(--bg2);padding:6px 10px;text-align:center;font-weight:500;color:var(--text2);white-space:nowrap;border:0.5px solid var(--border)}
+    .matrix-table td{padding:6px 10px;text-align:center;border:0.5px solid var(--border);color:var(--text)}
+    .matrix-table td.highlight{background:var(--blue-bg);color:var(--blue-dark);font-weight:500}
+    .sim-chart-wrap{position:relative;height:200px;margin-top:8px}
+
     @media(max-width:700px){
       .hero-bottom{grid-template-columns:1fr 1fr}
       .hero-right{gap:16px}
       .two-col{grid-template-columns:1fr}
       .target-form{grid-template-columns:1fr 1fr}
       .fab{bottom:1.25rem;right:1.25rem}
+      .sim-grid{grid-template-columns:1fr}
+      .sim-metrics{grid-template-columns:1fr 1fr}
+      .notif-overlay{padding:56px 0.5rem 0}
     }
   </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- Sheets URL (숨김, 토글 가능) -->
-  <div style="margin-bottom:1rem">
-    <span class="sync-toggle" onclick="toggleSync()">
-      <span id="sync-toggle-icon">▶</span> 데이터 연결 설정
-      <span class="sync-status" id="sync-status" style="margin-left:6px"></span>
-    </span>
-    <div class="sync-bar" id="sync-bar">
-      <span style="font-size:12px;color:var(--text2);white-space:nowrap">Sheets URL</span>
-      <input id="sheets-url" placeholder="Google Sheets CSV URL"/>
-      <button class="btn btn-primary btn-sm" onclick="saveAndLoad()">연결</button>
-      <button class="btn btn-sm" onclick="loadSheets()">↻</button>
+  <!-- 페이지 헤더 -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="sync-toggle" onclick="toggleSync()">
+        <span id="sync-toggle-icon">▶</span> 데이터 연결
+        <span class="sync-status" id="sync-status" style="margin-left:4px"></span>
+      </span>
+      <button class="btn btn-sm" onclick="loadSheets()" style="padding:3px 8px;font-size:11px">↻</button>
     </div>
+    <button class="notif-btn" onclick="toggleNotif()" title="알림">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <span class="notif-count" id="notif-count"></span>
+    </button>
+  </div>
+  <div class="sync-bar" id="sync-bar">
+    <span style="font-size:12px;color:var(--text2);white-space:nowrap">Sheets URL</span>
+    <input id="sheets-url" placeholder="Google Sheets CSV URL"/>
+    <button class="btn btn-primary btn-sm" onclick="saveAndLoad()">연결</button>
   </div>
 
   <div id="error-area"></div>
@@ -205,7 +270,7 @@
   <div class="tabs">
     <button class="tab active" onclick="switchTab('overview')">개요</button>
     <button class="tab" onclick="switchTab('rebal')">리밸런싱</button>
-    <button class="tab" onclick="switchTab('alerts')">알림 <span id="alert-badge"></span></button>
+    <button class="tab" onclick="switchTab('simulator')">목표 시뮬레이터</button>
     <button class="tab" onclick="switchTab('history')">월별 히스토리</button>
   </div>
 
@@ -265,6 +330,22 @@
 
   <!-- 리밸런싱 -->
   <div id="tab-rebal" class="tab-panel">
+    <!-- AI 목표 비중 추천 -->
+    <div class="card">
+      <h2>AI 목표 비중 추천</h2>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">투자 성향을 선택하면 현재 포트폴리오에 맞는 목표 비중을 추천해드려요.</p>
+      <div class="tendency-pills">
+        <span class="tendency-pill" onclick="selectTendency('conservative')">보수적</span>
+        <span class="tendency-pill active" onclick="selectTendency('neutral')">중립</span>
+        <span class="tendency-pill" onclick="selectTendency('aggressive')">공격적</span>
+      </div>
+      <button class="btn btn-primary" onclick="getAIRebalRecommend()">AI 추천 받기 ✦</button>
+      <div class="ai-rebal-result" id="ai-rebal-result">
+        <div id="ai-rebal-content"></div>
+        <button class="btn btn-sm" style="margin-top:10px" onclick="applyAIRecommend()">이 비중으로 적용</button>
+      </div>
+    </div>
+
     <div class="card">
       <h2>목표 비중 설정 (%)</h2>
       <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">ETF·암호화폐는 개별, 개별주·예수금은 합산 비중으로 설정합니다.</p>
@@ -317,10 +398,45 @@
     </div>
   </div>
 
-  <!-- 알림 -->
-  <div id="tab-alerts" class="tab-panel">
-    <div id="alerts-wrap"></div>
-    <p id="no-alerts" style="font-size:14px;color:var(--text2);text-align:center;padding:3rem 0;display:none">현재 발동된 알림이 없습니다 👍</p>
+  <!-- 목표 시뮬레이터 -->
+  <div id="tab-simulator" class="tab-panel">
+    <div class="card">
+      <h2>목표 설정</h2>
+      <div class="sim-grid">
+        <div class="sim-field"><label>월 실수령 (원)</label><input type="number" id="sim-salary" placeholder="4000000" oninput="runSim()"/></div>
+        <div class="sim-field"><label>목표 금액 (원)</label><input type="number" id="sim-goal" placeholder="500000000" oninput="runSim()"/></div>
+        <div class="sim-field"><label>월 투자 비율 (%)</label><input type="number" id="sim-rate" min="1" max="100" step="1" placeholder="20" oninput="runSim()"/></div>
+        <div class="sim-field">
+          <label>연 수익률 (%)</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" id="sim-yield" step="0.1" placeholder="9.45" oninput="runSim()" style="flex:1"/>
+            <button class="btn btn-sm" onclick="usePortfolioYield()" title="현재 포트폴리오 수익률 가져오기">포트폴리오 연동</button>
+          </div>
+        </div>
+      </div>
+      <div id="sim-result-area" style="display:none">
+        <div class="sim-result">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:6px">목표 달성까지</div>
+          <div class="sim-result-main" id="sim-months-text">—</div>
+          <div class="sim-result-sub" id="sim-date-text"></div>
+          <div class="sim-metrics">
+            <div class="sim-metric"><div class="sim-metric-label">월 투자금</div><div class="sim-metric-val" id="sim-monthly-amt">—</div></div>
+            <div class="sim-metric"><div class="sim-metric-label">총 투자 원금</div><div class="sim-metric-val" id="sim-total-cost">—</div></div>
+            <div class="sim-metric"><div class="sim-metric-label">총 수익</div><div class="sim-metric-val up" id="sim-total-gain">—</div></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:1.5rem">
+          <h2>투자 비율별 달성 시점 매트릭스</h2>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">수익률 시나리오별 목표 달성 시점 (년)</p>
+          <div class="matrix-wrap"><table class="matrix-table" id="sim-matrix"></table></div>
+        </div>
+        <div class="card">
+          <h2>자산 성장 추이</h2>
+          <div class="sim-chart-wrap"><canvas id="sim-chart"></canvas></div>
+        </div>
+      </div>
+      <p id="sim-empty" style="font-size:13px;color:var(--text2);text-align:center;padding:2rem">위 항목을 입력하면 시뮬레이션 결과가 나타납니다.</p>
+    </div>
   </div>
 
   <!-- 히스토리 -->
@@ -348,6 +464,17 @@
   </div>
 
   <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:1rem">데이터는 브라우저에 저장됩니다 (localStorage)</p>
+</div>
+
+<!-- 알림 드롭다운 패널 -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotif(event)">
+  <div class="notif-panel">
+    <div class="notif-header">
+      <h3>알림</h3>
+      <button class="btn-del" onclick="closeNotif()">✕</button>
+    </div>
+    <div class="notif-list" id="notif-list"></div>
+  </div>
 </div>
 
 <!-- FAB -->
@@ -420,6 +547,60 @@ function toggleSync() {
   const icon = document.getElementById('sync-toggle-icon');
   const open = bar.classList.toggle('open');
   icon.textContent = open ? '▼' : '▶';
+}
+
+// ── 데이터 신선도 체크 (7일 초과 시 true) ────────────────────────────
+function isDataStale() {
+  const last = localStorage.getItem('pf_last_update');
+  if (!last) return false;
+  return (Date.now() - parseInt(last)) > 7 * 24 * 60 * 60 * 1000;
+}
+
+// ── 알림 패널 ────────────────────────────────────────────────────────
+function toggleNotif() {
+  document.getElementById('notif-overlay').classList.toggle('open');
+  renderNotifList();
+}
+
+function closeNotif(e) {
+  if (!e || e.target === document.getElementById('notif-overlay')) {
+    document.getElementById('notif-overlay').classList.remove('open');
+  }
+}
+
+function renderNotifList() {
+  const alerts = getAlerts();
+  const stale  = isDataStale();
+  const list   = document.getElementById('notif-list');
+  const items  = [];
+
+  if (stale) {
+    const last = localStorage.getItem('pf_last_update');
+    const days = Math.floor((Date.now() - parseInt(last)) / 86400000);
+    items.push(`<div class="notif-item warn">
+      <span class="notif-item-icon">📅</span>
+      <div class="notif-item-body"><strong>데이터 업데이트 필요</strong>마지막 업데이트가 ${days}일 전이에요. 잔고를 확인해주세요.</div>
+    </div>`);
+  }
+
+  alerts.forEach(a => {
+    if(a.type==='rebal') items.push(`<div class="notif-item info">
+      <span class="notif-item-icon">⚖️</span>
+      <div class="notif-item-body"><strong>${a.name} 리밸런싱 필요</strong>현재 ${a.cur.toFixed(1)}% → 목표 ${a.tgt}% (${a.diff>0?'+':''}${a.diff.toFixed(1)}%p)</div>
+    </div>`);
+    if(a.type==='stop') items.push(`<div class="notif-item danger">
+      <span class="notif-item-icon">🚨</span>
+      <div class="notif-item-body"><strong>${a.name} 손절선 도달</strong>현재 수익률 ${fmtPct(a.ret)} — 손절선 ${a.line}%</div>
+    </div>`);
+    if(a.type==='buy') items.push(`<div class="notif-item success">
+      <span class="notif-item-icon">📉</span>
+      <div class="notif-item-body"><strong>${a.name} 추매 타이밍</strong>현재 수익률 ${fmtPct(a.ret)} — 추매선 ${a.line}%</div>
+    </div>`);
+  });
+
+  list.innerHTML = items.length
+    ? items.join('')
+    : '<div class="notif-empty">알림이 없습니다 👍</div>';
 }
 
 function saveAndLoad() {
@@ -497,13 +678,13 @@ function parseCSV(text){
 
 // ── 탭 전환 ───────────────────────────────────────────────────────
 function switchTab(id){
-  ['overview','rebal','alerts','history'].forEach((tid,i)=>{
+  ['overview','rebal','simulator','history'].forEach((tid,i)=>{
     document.querySelectorAll('.tab')[i].classList.toggle('active',tid===id);
     document.getElementById('tab-'+tid).classList.toggle('active',tid===id);
   });
-  if(id==='rebal')   renderRebal();
-  if(id==='alerts')  renderAlerts();
-  if(id==='history') renderHistory();
+  if(id==='rebal')     renderRebal();
+  if(id==='simulator') runSim();
+  if(id==='history')   renderHistory();
 }
 function filtered(){return activeAcct==='전체'?items:items.filter(it=>it.acct===activeAcct);}
 function setAcct(a){activeAcct=a;render();}
@@ -582,10 +763,13 @@ function render(){
   const retPct     = totalCost>0?(totalInvest-totalCost)/totalCost*100:0;
   const alerts     = getAlerts();
 
-  // alert badge
-  const ab=document.getElementById('alert-badge');
-  ab.textContent=alerts.length||'';
-  ab.style.cssText=alerts.length?'display:inline-block;background:var(--red);color:#fff;border-radius:10px;font-size:11px;padding:1px 6px;margin-left:4px':'';
+  // 알림 아이콘 뱃지 업데이트
+  const nc=document.getElementById('notif-count');
+  const allAlerts = getAlerts();
+  const staleAlert = isDataStale();
+  const totalNotif = allAlerts.length + (staleAlert?1:0);
+  nc.textContent = totalNotif||'';
+  nc.classList.toggle('show', totalNotif>0);
 
   // ── 히어로 ──
   document.getElementById('hero-total').textContent = '₩'+fmt(totalAll);
@@ -920,6 +1104,100 @@ function updateThreshold(v){
   renderRebal();render();
 }
 
+// ── AI 목표 비중 추천 ────────────────────────────────────────────────
+let aiRecommendData = null;
+let selectedTendency = 'neutral';
+
+function selectTendency(t) {
+  selectedTendency = t;
+  document.querySelectorAll('.tendency-pill').forEach((el,i) => {
+    el.classList.toggle('active', ['conservative','neutral','aggressive'][i] === t);
+  });
+}
+
+async function getAIRebalRecommend() {
+  const btn = event.target;
+  btn.textContent = '분석 중...';
+  btn.disabled = true;
+
+  const investItems = items.filter(it=>!isCash(it.name,it.type));
+  const cashItems   = items.filter(it=>isCash(it.name,it.type));
+  const totalAll    = items.reduce((s,i)=>s+i.val,0);
+  const nameMap = {};
+  investItems.forEach(it=>{nameMap[it.name]=(nameMap[it.name]||0)+it.val;});
+
+  const holdings = Object.entries(nameMap).map(([name,val])=>
+    `${name}: ${(val/totalAll*100).toFixed(1)}%`
+  ).join(', ');
+  const cashPct = totalAll>0 ? (cashItems.reduce((s,i)=>s+i.val,0)/totalAll*100).toFixed(1) : 0;
+  const tendencyMap = {conservative:'보수적(안정 추구, 채권/현금 비중 높게)', neutral:'중립(균형 추구)', aggressive:'공격적(성장 추구, 주식 비중 높게)'};
+
+  const prompt = `투자 포트폴리오 어드바이저로서 아래 포트폴리오에 맞는 목표 비중을 추천해주세요.
+
+현재 보유:
+${holdings}
+예수금: ${cashPct}%
+
+투자 성향: ${tendencyMap[selectedTendency]}
+
+각 종목과 예수금에 대해 합계가 정확히 100%가 되도록 추천 비중을 알려주세요.
+반드시 아래 JSON 형식으로만 답변하세요. 다른 텍스트 없이 JSON만:
+{"recommendations":[{"name":"종목명","pct":숫자},...],"reason":"추천 이유 1~2문장"}`;
+
+  try {
+    const res = await fetch('https://portfolio-api-nu-five.vercel.app/api/advice', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({prompt})
+    });
+    const data = await res.json();
+    const text = data.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('JSON 파싱 실패');
+    aiRecommendData = JSON.parse(jsonMatch[0]);
+
+    const resultEl = document.getElementById('ai-rebal-result');
+    const contentEl = document.getElementById('ai-rebal-content');
+    contentEl.innerHTML = `
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px">${aiRecommendData.reason||''}</div>
+      ${aiRecommendData.recommendations.map(r=>
+        `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:13px">
+          <span>${r.name}</span><span style="font-weight:500">${r.pct}%</span>
+        </div>`
+      ).join('')}
+    `;
+    resultEl.classList.add('show');
+  } catch(e) {
+    document.getElementById('ai-rebal-content').innerHTML = `<p style="color:var(--red-dark);font-size:13px">추천을 불러오지 못했습니다: ${e.message}</p>`;
+    document.getElementById('ai-rebal-result').classList.add('show');
+  }
+  btn.textContent = 'AI 추천 받기 ✦';
+  btn.disabled = false;
+}
+
+function applyAIRecommend() {
+  if (!aiRecommendData) return;
+  const investItems = items.filter(it=>!isCash(it.name,it.type));
+  const etfNames    = [...new Set(investItems.filter(it=>isETF(it.name,it.type)).map(i=>i.ticker||i.name))];
+  const cryptoNames = [...new Set(investItems.filter(it=>isCrypto(it.name,it.type)).map(i=>i.ticker||i.name))];
+
+  let stockSum = 0, cashSum = 0;
+  aiRecommendData.recommendations.forEach(r => {
+    // ETF/암호화폐 — 티커 기반으로 input 찾기
+    const key = r.name.replace(/[^a-zA-Z0-9]/g,'_');
+    const el = document.getElementById('tgt_'+key);
+    if (el) { el.value = r.pct; return; }
+    // 개별주 합산
+    const isS = items.some(it=>isStock(it.name,it.type) && it.name===r.name);
+    if (isS) { stockSum += r.pct; return; }
+    // 예수금
+    if (isCash(r.name,'')) { cashSum += r.pct; }
+  });
+  if (stockSum) { const el=document.getElementById('tgt_STOCKS'); if(el) el.value=stockSum; }
+  if (cashSum)  { const el=document.getElementById('tgt_CASH');   if(el) el.value=cashSum; }
+  updateTargetSum();
+  alert('추천 비중이 입력란에 적용됐어요. 확인 후 저장 버튼을 눌러주세요.');
+}
+
 // ── 알림 렌더 ────────────────────────────────────────────────────
 function renderAlerts(){
   const alerts=getAlerts();
@@ -931,6 +1209,103 @@ function renderAlerts(){
     if(a.type==='stop')  return `<div class="alert stop"><span class="alert-icon">🚨</span><div class="alert-body"><strong>${a.name} 손절선 도달</strong>현재 수익률 ${fmtPct(a.ret)} — 손절선 ${a.line}%</div></div>`;
     if(a.type==='buy')   return `<div class="alert buy"><span class="alert-icon">📉</span><div class="alert-body"><strong>${a.name} 추매 타이밍</strong>현재 수익률 ${fmtPct(a.ret)} — 추매선 ${a.line}%</div></div>`;
   }).join('')+'</div>';
+}
+
+// ── 목표 시뮬레이터 ──────────────────────────────────────────────────
+let simChart = null;
+
+function usePortfolioYield() {
+  const investItems = items.filter(it=>!isCash(it.name,it.type));
+  const totalCost = investItems.reduce((s,i)=>s+(i.avgPrice&&i.qty?i.avgPrice*i.qty:i.val/(1+i.ret/100)),0);
+  const totalVal  = investItems.reduce((s,i)=>s+i.val,0);
+  const retPct    = totalCost>0?(totalVal-totalCost)/totalCost*100:0;
+  document.getElementById('sim-yield').value = retPct.toFixed(2);
+  runSim();
+}
+
+function runSim() {
+  const salary  = parseFloat(document.getElementById('sim-salary')?.value)||0;
+  const goal    = parseFloat(document.getElementById('sim-goal')?.value)||0;
+  const rate    = parseFloat(document.getElementById('sim-rate')?.value)||0;
+  const yieldPct= parseFloat(document.getElementById('sim-yield')?.value)||0;
+
+  const empty = document.getElementById('sim-empty');
+  const resultArea = document.getElementById('sim-result-area');
+
+  if (!salary||!goal||!rate||!yieldPct) {
+    empty.style.display='block'; resultArea.style.display='none'; return;
+  }
+  empty.style.display='none'; resultArea.style.display='block';
+
+  const monthly = salary * rate / 100;
+  const monthlyRate = yieldPct / 100 / 12;
+  const current = items.reduce((s,i)=>s+i.val,0);
+
+  // 목표 달성 월수 계산
+  let val = current, months = 0;
+  while (val < goal && months < 600) {
+    val = val * (1 + monthlyRate) + monthly;
+    months++;
+  }
+
+  const years = Math.floor(months/12), mons = months%12;
+  const totalCost = current + monthly * months;
+  const totalGain = goal - totalCost;
+  const targetDate = new Date();
+  targetDate.setMonth(targetDate.getMonth() + months);
+
+  document.getElementById('sim-months-text').textContent =
+    months >= 600 ? '600개월 내 달성 불가' : `${years > 0 ? years+'년 ':'' }${mons > 0 ? mons+'개월' : ''}`;
+  document.getElementById('sim-date-text').textContent =
+    months < 600 ? `${targetDate.getFullYear()}년 ${targetDate.getMonth()+1}월 달성 예상` : '투자 비율이나 수익률을 높여보세요';
+  document.getElementById('sim-monthly-amt').textContent = '₩'+fmt(monthly);
+  document.getElementById('sim-total-cost').textContent = '₩'+fmt(totalCost);
+  document.getElementById('sim-total-gain').textContent = '+₩'+fmt(Math.max(0,totalGain));
+
+  // 매트릭스 (투자비율 10~50% × 수익률 5~15%)
+  const rates  = [10,15,20,25,30,40,50];
+  const yields = [5,7,9,11,13,15];
+  let matHTML = '<tr><th>투자비율 \ 수익률</th>' + yields.map(y=>`<th>${y}%</th>`).join('') + '</tr>';
+  rates.forEach(r => {
+    matHTML += `<tr><td style="font-weight:500;background:var(--bg2)">${r}%</td>`;
+    yields.forEach(y => {
+      const m2 = salary*r/100, mr2 = y/100/12;
+      let v2=current, mo2=0;
+      while(v2<goal&&mo2<600){v2=v2*(1+mr2)+m2;mo2++;}
+      const yr2 = (mo2/12).toFixed(1);
+      const isSelected = r===rate && y===yieldPct;
+      matHTML += `<td class="${isSelected?'highlight':''}">${mo2>=600?'—':yr2+'년'}</td>`;
+    });
+    matHTML += '</tr>';
+  });
+  document.getElementById('sim-matrix').innerHTML = matHTML;
+
+  // 차트
+  const labels=[], dataInvest=[], dataTotal=[];
+  let v3=current;
+  for(let m=0;m<=Math.min(months+12,360);m+=3){
+    labels.push(m===0?'현재':Math.floor(m/12)+'년');
+    dataInvest.push(Math.round(current + monthly*m));
+    dataTotal.push(Math.round(v3));
+    for(let j=0;j<3;j++){v3=v3*(1+monthlyRate)+monthly;}
+  }
+
+  if(simChart){simChart.destroy();simChart=null;}
+  const dark=isDark(),gc=dark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)',tc=dark?'#9a9a96':'#6b6b67';
+  simChart = new Chart(document.getElementById('sim-chart').getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'복리 자산',data:dataTotal,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',borderWidth:2,fill:true,tension:0.3,pointRadius:2},
+      {label:'단순 투자금',data:dataInvest,borderColor:'#888780',borderDash:[4,4],borderWidth:1.5,fill:false,tension:0,pointRadius:0},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:11},color:tc}}},
+      scales:{
+        x:{grid:{color:gc},ticks:{color:tc,font:{size:10}}},
+        y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>'₩'+(v>=1e8?(v/1e8).toFixed(0)+'억':v>=1e4?(v/1e4).toFixed(0)+'만':fmt(v))}}
+      }
+    }
+  });
 }
 
 // ── 히스토리 ─────────────────────────────────────────────────────
