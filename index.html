@@ -119,6 +119,23 @@
     .snap-row input{flex:1;padding:7px 10px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
     .error-box{background:var(--red-bg);color:var(--red-dark);border:0.5px solid var(--red);border-radius:var(--radius);padding:12px 16px;font-size:13px;line-height:1.6;margin-bottom:1rem}
 
+    /* 로그인 */
+    .login-overlay{position:fixed;inset:0;background:var(--bg3);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .login-box{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:360px}
+    .login-title{font-size:20px;font-weight:500;margin-bottom:4px}
+    .login-sub{font-size:13px;color:var(--text2);margin-bottom:1.75rem}
+    .login-field{margin-bottom:12px}
+    .login-field label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
+    .login-field input{width:100%;padding:9px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);outline:none}
+    .login-field input:focus{border-color:var(--blue);background:var(--bg)}
+    .login-btn{width:100%;padding:10px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;margin-top:8px}
+    .login-btn:hover{opacity:0.85}
+    .login-btn:disabled{opacity:0.5;cursor:not-allowed}
+    .login-error{font-size:13px;color:var(--red-dark);background:var(--red-bg);border-radius:var(--radius);padding:8px 12px;margin-top:10px;display:none}
+    .login-error.show{display:block}
+    .user-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);padding:4px 8px;background:var(--bg2);border-radius:20px;cursor:pointer}
+    .user-chip:hover{background:var(--bg3)}
+
     /* FAB */
     .fab{position:fixed;bottom:2rem;right:2rem;width:56px;height:56px;border-radius:50%;background:var(--text);color:var(--bg);border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.18);z-index:100;transition:opacity .15s}
     .fab:hover{opacity:0.85}
@@ -242,6 +259,24 @@
   </style>
 </head>
 <body>
+<!-- 로그인 오버레이 -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <div class="login-title">내 투자 포트폴리오</div>
+    <div class="login-sub">로그인하여 계속하세요</div>
+    <div class="login-field">
+      <label>아이디</label>
+      <input type="text" id="login-id" placeholder="아이디 입력" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="login-field">
+      <label>비밀번호</label>
+      <input type="password" id="login-pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
 <div class="container">
 
   <!-- 페이지 헤더 -->
@@ -252,6 +287,10 @@
         <span class="sync-status" id="sync-status" style="margin-left:4px"></span>
       </span>
       <button class="btn btn-sm" onclick="loadSheets()" style="padding:3px 8px;font-size:11px">↻</button>
+    </div>
+    <div class="user-chip" id="user-chip" onclick="doLogout()">
+      <span id="user-name">—</span>
+      <span style="font-size:10px">로그아웃</span>
     </div>
     <button class="notif-btn" onclick="toggleNotif()" title="알림">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -587,9 +626,66 @@ let rebalThreshold = parseInt(localStorage.getItem('rebal_threshold')||'5');
 
 // ── 초기화 ────────────────────────────────────────────────────────
 window.onload = () => {
+  // 로그인 체크
+  const token = localStorage.getItem('pf_token');
+  const name  = localStorage.getItem('pf_user');
+  if (token && name) {
+    showApp(name);
+  } else {
+    document.getElementById('login-overlay').style.display = 'flex';
+  }
   document.getElementById('sheets-url').value = load('pf_sheets_url', DEFAULT_URL);
-  loadSheets();
 };
+
+async function doLogin() {
+  const id  = document.getElementById('login-id').value.trim();
+  const pw  = document.getElementById('login-pw').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+
+  if (!id || !pw) { showLoginError('아이디와 비밀번호를 입력해주세요'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '로그인 중...';
+  err.classList.remove('show');
+
+  try {
+    const res = await fetch('https://portfolio-api-nu-five.vercel.app/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({id, pw})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '로그인 실패');
+
+    localStorage.setItem('pf_token', data.token);
+    localStorage.setItem('pf_user', data.name);
+    showApp(data.name);
+  } catch(e) {
+    showLoginError(e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '로그인';
+}
+
+function showLoginError(msg) {
+  const err = document.getElementById('login-error');
+  err.textContent = msg;
+  err.classList.add('show');
+}
+
+function showApp(name) {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('user-name').textContent = name;
+  loadSheets();
+}
+
+function doLogout() {
+  if (!confirm('로그아웃할까요?')) return;
+  localStorage.removeItem('pf_token');
+  localStorage.removeItem('pf_user');
+  location.reload();
+}
 
 function toggleSync() {
   const bar = document.getElementById('sync-bar');
@@ -1050,7 +1146,11 @@ async function calcScore() {
 
   try {
     const res = await fetch('https://portfolio-api-nu-five.vercel.app/api/advice', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization': 'Bearer ' + (localStorage.getItem('pf_token')||'')
+      },
       body: JSON.stringify({prompt})
     });
     const data = await res.json();
@@ -1346,7 +1446,11 @@ ${holdingLines}
 
   try {
     const res = await fetch('https://portfolio-api-nu-five.vercel.app/api/advice', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization': 'Bearer ' + (localStorage.getItem('pf_token')||'')
+      },
       body: JSON.stringify({prompt})
     });
     const data = await res.json();
@@ -1667,7 +1771,10 @@ ${holdingsSummary}
     const timer = setTimeout(() => controller.abort(), 25000);
     const res = await fetch(VERCEL_API, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {
+        'Content-Type':'application/json',
+        'Authorization': 'Bearer ' + (localStorage.getItem('pf_token')||'')
+      },
       body: JSON.stringify({ prompt }),
       signal: controller.signal,
     });
