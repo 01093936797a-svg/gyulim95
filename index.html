@@ -960,24 +960,29 @@ ${cashSummary}
 
 응답은 간결하고 실용적으로, 각 섹션은 3~5문장으로 작성해주세요. 투자 권유가 아닌 참고용 의견임을 마지막에 짧게 언급해주세요.`;
 
+  // Vercel API URL — 배포 후 실제 URL로 교체하세요
+  const VERCEL_API = 'https://portfolio-api-nu-five.vercel.app/api/advice';
+
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(VERCEL_API, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        tools: [{type:'web_search_20250305',name:'web_search'}],
-        messages: [{role:'user',content: prompt}]
-      })
+      body: JSON.stringify({ prompt })
     });
+    if(!res.ok) throw new Error(`서버 오류 ${res.status}`);
     const data = await res.json();
-    const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    if(!text) throw new Error('응답 없음');
-    document.getElementById('modal-body').innerHTML = formatAdvice(text);
+    if(!data.text) throw new Error(data.error||'응답 없음');
+    document.getElementById('modal-body').innerHTML = formatAdvice(data.text);
   } catch(e) {
     document.getElementById('modal-body').innerHTML =
-      `<p style="color:var(--text2);font-size:13px">분석을 불러오지 못했습니다.<br>${e.message}</p>`;
+      `<div style="font-size:13px;color:var(--text2);line-height:1.7">
+        <strong style="color:var(--red-dark);display:block;margin-bottom:8px">분석을 불러오지 못했습니다</strong>
+        ${e.message}<br><br>
+        <strong>해결 방법:</strong><br>
+        1. Vercel에 <code>api/advice.js</code>가 배포되어 있는지 확인<br>
+        2. <code>VERCEL_API</code> URL이 실제 배포 URL과 일치하는지 확인<br>
+        3. Vercel 환경변수에 <code>ANTHROPIC_API_KEY</code>가 설정되어 있는지 확인
+      </div>`;
   }
 }
 
