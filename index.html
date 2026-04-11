@@ -1123,26 +1123,45 @@ async function getAIRebalRecommend() {
   const investItems = items.filter(it=>!isCash(it.name,it.type));
   const cashItems   = items.filter(it=>isCash(it.name,it.type));
   const totalAll    = items.reduce((s,i)=>s+i.val,0);
-  const nameMap = {};
-  investItems.forEach(it=>{nameMap[it.name]=(nameMap[it.name]||0)+it.val;});
 
-  const holdings = Object.entries(nameMap).map(([name,val])=>
-    `${name}: ${(val/totalAll*100).toFixed(1)}%`
-  ).join(', ');
-  const cashPct = totalAll>0 ? (cashItems.reduce((s,i)=>s+i.val,0)/totalAll*100).toFixed(1) : 0;
-  const tendencyMap = {conservative:'보수적(안정 추구, 채권/현금 비중 높게)', neutral:'중립(균형 추구)', aggressive:'공격적(성장 추구, 주식 비중 높게)'};
+  // 티커 기준으로 합산 (같은 종목 다른 계좌 → 하나로)
+  const tickerMap = {};
+  investItems.forEach(it => {
+    const key = it.ticker || it.name;
+    // 종목명에서 계좌 suffix 제거 (예: "TIME S&P500 (ISA)" → "TIME S&P500")
+    const cleanName = it.name.replace(/\s*\([^)]*\)\s*$/,'');
+    if (!tickerMap[key]) tickerMap[key] = { name: cleanName, ticker: key, val: 0, type: it.type };
+    tickerMap[key].val += it.val;
+  });
 
-  const prompt = `투자 포트폴리오 어드바이저로서 아래 포트폴리오에 맞는 목표 비중을 추천해주세요.
+  const cashTotal = cashItems.reduce((s,i)=>s+i.val,0);
+  const cashPct   = totalAll > 0 ? (cashTotal/totalAll*100).toFixed(1) : 0;
+  const tendencyMap = {
+    conservative: '보수적 (안정 추구: 채권·현금 비중 높게, 변동성 낮게)',
+    neutral:      '중립 (균형 추구: 성장과 안정의 균형)',
+    aggressive:   '공격적 (성장 추구: 주식·암호화폐 비중 높게, 수익 극대화)'
+  };
 
-현재 보유:
-${holdings}
-예수금: ${cashPct}%
+  // 프롬프트에 티커 기준 합산된 종목만 전달
+  const holdingLines = Object.values(tickerMap).map(g =>
+    `- ${g.name} (${isETF(g.name,g.type)?'ETF':isCrypto(g.name,g.type)?'암호화폐':'개별주'}): ${(g.val/totalAll*100).toFixed(1)}%`
+  ).join('\n');
+
+  const prompt = `투자 포트폴리오 어드바이저입니다. 아래 포트폴리오에 맞는 목표 비중을 추천해주세요.
+
+현재 보유 종목 (티커 기준 합산):
+${holdingLines}
+- 예수금/현금: ${cashPct}%
 
 투자 성향: ${tendencyMap[selectedTendency]}
 
-각 종목과 예수금에 대해 합계가 정확히 100%가 되도록 추천 비중을 알려주세요.
+중요: 같은 종목이 여러 계좌에 분산되어 있어도 종목명은 하나로만 표시하세요.
+합계가 정확히 100%가 되도록 추천하세요.
+개별주는 "개별주합산" 하나로 묶어서 응답하세요.
+예수금은 "예수금" 하나로 응답하세요.
+
 반드시 아래 JSON 형식으로만 답변하세요. 다른 텍스트 없이 JSON만:
-{"recommendations":[{"name":"종목명","pct":숫자},...],"reason":"추천 이유 1~2문장"}`;
+{"recommendations":[{"ticker":"티커또는종목명","name":"표시이름","pct":숫자},...],"reason":"추천 이유 1~2문장"}`;
 
   try {
     const res = await fetch('https://portfolio-api-nu-five.vercel.app/api/advice', {
@@ -1154,20 +1173,28 @@ ${holdings}
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('JSON 파싱 실패');
     aiRecommendData = JSON.parse(jsonMatch[0]);
+    // tickerMap 저장 (적용 시 사용)
+    aiRecommendData._tickerMap = tickerMap;
 
     const resultEl = document.getElementById('ai-rebal-result');
     const contentEl = document.getElementById('ai-rebal-content');
+    const total = aiRecommendData.recommendations.reduce((s,r)=>s+r.pct,0);
     contentEl.innerHTML = `
       <div style="font-size:13px;color:var(--text2);margin-bottom:10px">${aiRecommendData.reason||''}</div>
       ${aiRecommendData.recommendations.map(r=>
-        `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:13px">
-          <span>${r.name}</span><span style="font-weight:500">${r.pct}%</span>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px">
+          <span>${r.name}</span>
+          <span style="font-weight:500">${r.pct}%</span>
         </div>`
       ).join('')}
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;font-weight:500;color:${Math.abs(total-100)<1?'var(--green)':'var(--red)'}">
+        <span>합계</span><span>${total}%</span>
+      </div>
     `;
     resultEl.classList.add('show');
   } catch(e) {
-    document.getElementById('ai-rebal-content').innerHTML = `<p style="color:var(--red-dark);font-size:13px">추천을 불러오지 못했습니다: ${e.message}</p>`;
+    document.getElementById('ai-rebal-content').innerHTML =
+      `<p style="color:var(--red-dark);font-size:13px">추천을 불러오지 못했습니다: ${e.message}</p>`;
     document.getElementById('ai-rebal-result').classList.add('show');
   }
   btn.textContent = 'AI 추천 받기 ✦';
@@ -1176,26 +1203,37 @@ ${holdings}
 
 function applyAIRecommend() {
   if (!aiRecommendData) return;
-  const investItems = items.filter(it=>!isCash(it.name,it.type));
-  const etfNames    = [...new Set(investItems.filter(it=>isETF(it.name,it.type)).map(i=>i.ticker||i.name))];
-  const cryptoNames = [...new Set(investItems.filter(it=>isCrypto(it.name,it.type)).map(i=>i.ticker||i.name))];
+  const tickerMap = aiRecommendData._tickerMap || {};
 
-  let stockSum = 0, cashSum = 0;
   aiRecommendData.recommendations.forEach(r => {
-    // ETF/암호화폐 — 티커 기반으로 input 찾기
-    const key = r.name.replace(/[^a-zA-Z0-9]/g,'_');
+    const name = r.name || '';
+    const ticker = r.ticker || name;
+
+    // 예수금
+    if (name.includes('예수금') || name.includes('현금') || ticker.includes('CASH')) {
+      const el = document.getElementById('tgt_CASH');
+      if (el) el.value = r.pct;
+      return;
+    }
+    // 개별주 합산
+    if (name.includes('개별주')) {
+      const el = document.getElementById('tgt_STOCKS');
+      if (el) el.value = r.pct;
+      return;
+    }
+    // ETF/암호화폐 — 티커로 input 찾기
+    const key = ticker.replace(/[^a-zA-Z0-9]/g,'_');
     const el = document.getElementById('tgt_'+key);
     if (el) { el.value = r.pct; return; }
-    // 개별주 합산
-    const isS = items.some(it=>isStock(it.name,it.type) && it.name===r.name);
-    if (isS) { stockSum += r.pct; return; }
-    // 예수금
-    if (isCash(r.name,'')) { cashSum += r.pct; }
+
+    // 티커 매칭 실패 시 종목명으로 재시도
+    const nameKey = name.replace(/[^a-zA-Z0-9]/g,'_');
+    const el2 = document.getElementById('tgt_'+nameKey);
+    if (el2) { el2.value = r.pct; }
   });
-  if (stockSum) { const el=document.getElementById('tgt_STOCKS'); if(el) el.value=stockSum; }
-  if (cashSum)  { const el=document.getElementById('tgt_CASH');   if(el) el.value=cashSum; }
+
   updateTargetSum();
-  alert('추천 비중이 입력란에 적용됐어요. 확인 후 저장 버튼을 눌러주세요.');
+  alert('추천 비중이 적용됐어요. 확인 후 저장 버튼을 눌러주세요.');
 }
 
 // ── 알림 렌더 ────────────────────────────────────────────────────
