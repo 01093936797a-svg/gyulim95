@@ -808,8 +808,7 @@ function saveItem() {
   autoSave();
   render();
   // Sheets에서 현재가 재로드
-  const url = document.getElementById('sheets-url').value.trim() || sheetsUrl;
-  if (url) loadSheets(url);
+  if (sheetsUrl) refreshPrices(sheetsUrl);
 }
 
 function deleteItem(idx) {
@@ -835,16 +834,24 @@ async function loadDB() {
     items     = data.items     || [];
     targets   = data.targets   || {};
     snapshots = data.snapshots || [];
-    sheetsUrl = data.sheetsUrl || DEFAULT_URL;
+    sheetsUrl      = data.sheetsUrl || '';
     rebalThreshold = data.rebalThreshold || 5;
 
     // Sheets URL 입력란 업데이트
     const urlEl = document.getElementById('sheets-url');
-    if (urlEl && sheetsUrl) urlEl.value = sheetsUrl;
+    if (urlEl) urlEl.value = sheetsUrl;
 
-    // Sheets에서 현재가 로드
-    if (sheetsUrl) await loadSheets(sheetsUrl);
-    else render();
+    // DB 데이터로 먼저 렌더링
+    render();
+
+    // Sheets에서 현재가만 업데이트 (DB 종목 기반)
+    if (sheetsUrl) await refreshPrices(sheetsUrl);
+    else {
+      // Sheets URL 없으면 연결 설정 열어주기
+      document.getElementById('sync-bar').classList.add('open');
+      document.getElementById('sync-toggle-icon').textContent = '▼';
+      setStatus('warn', 'Sheets URL을 입력해주세요');
+    }
   } catch(e) {
     console.error('DB 로드 실패:', e);
     render();
@@ -955,22 +962,52 @@ async function fetchWithFallback(targetUrl) {
   throw new Error('모든 프록시 실패');
 }
 
-async function loadSheets(urlParam) {
-  const url = urlParam || document.getElementById('sheets-url').value.trim() || sheetsUrl || DEFAULT_URL;
+// Sheets에서 현재가만 가져와서 DB items에 merge
+async function refreshPrices(urlParam) {
+  const url = urlParam || sheetsUrl;
   if(!url) return;
-  setStatus('loading','불러오는 중...');
+  setStatus('loading','현재가 업데이트 중...');
   document.getElementById('error-area').innerHTML='';
   try{
     const text = await fetchWithFallback(url);
-    const parsed = parseCSV(text);
-    if(!parsed.length) throw new Error('데이터 파싱 실패. 헤더를 확인해주세요.');
-    items = parsed;
-    setStatus('ok',`✓ ${items.length}개 로드됨`);
+    const sheetItems = parseCSV(text);
+    if(!sheetItems.length) throw new Error('Sheets 데이터 파싱 실패');
+
+    // 티커/종목명 기준으로 현재가·수익률만 업데이트
+    const priceMap = {};
+    sheetItems.forEach(si => {
+      const key = (si.ticker && si.ticker !== si.name) ? si.ticker : si.name;
+      priceMap[key] = { curPrice: si.curPrice, val: si.val, ret: si.ret };
+      // 종목명 자체도 키로 등록
+      priceMap[si.name] = { curPrice: si.curPrice, val: si.val, ret: si.ret };
+    });
+
+    // DB items의 현재가·수익률 업데이트
+    items = items.map(it => {
+      const key = (it.ticker && it.ticker !== it.name) ? it.ticker : it.name;
+      const price = priceMap[key] || priceMap[it.name.replace(/\s*\([^)]*\)\s*$/,'')] || null;
+      if (price && price.curPrice) {
+        const curPrice = price.curPrice;
+        const val      = curPrice * (it.qty || 0) || price.val || it.val;
+        const ret      = it.avgPrice ? (curPrice - it.avgPrice) / it.avgPrice * 100 : price.ret;
+        return { ...it, curPrice, val, ret };
+      }
+      return it;
+    });
+
+    localStorage.setItem('pf_last_update', Date.now().toString());
+    setStatus('ok', `✓ 현재가 업데이트됨`);
     render();
   }catch(e){
-    setStatus('err','연결 실패');
-    document.getElementById('error-area').innerHTML=`<div class="error-box"><strong>연결 실패</strong><br>${e.message}</div>`;
+    setStatus('err','현재가 로드 실패');
+    document.getElementById('error-area').innerHTML=`<div class="error-box"><strong>현재가 로드 실패</strong><br>${e.message}</div>`;
+    render();
   }
+}
+
+// 하위 호환용 alias
+async function loadSheets(urlParam) {
+  return refreshPrices(urlParam);
 }
 
 function setStatus(cls,msg){
