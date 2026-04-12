@@ -854,10 +854,15 @@ async function loadDB() {
     // DB 데이터로 먼저 렌더링
     render();
 
-    // Sheets에서 현재가만 업데이트 (DB 종목 기반)
-    if (sheetsUrl) await refreshPrices(sheetsUrl);
-    else {
-      // Sheets URL 없으면 연결 설정 열어주기
+    if (sheetsUrl) {
+      if (items.length === 0) {
+        // DB에 종목이 없으면 Sheets에서 전체 데이터 import
+        await importFromSheets(sheetsUrl);
+      } else {
+        // DB에 종목이 있으면 현재가만 업데이트
+        await refreshPrices(sheetsUrl);
+      }
+    } else {
       document.getElementById('sync-bar').classList.add('open');
       document.getElementById('sync-toggle-icon').textContent = '▼';
       setStatus('warn', 'Sheets URL을 입력해주세요');
@@ -970,6 +975,31 @@ async function fetchWithFallback(targetUrl) {
     }catch(e){console.warn(`프록시${i+1}실패`,e.message);}
   }
   throw new Error('모든 프록시 실패');
+}
+
+// Sheets에서 전체 데이터 import (DB가 비어있을 때)
+async function importFromSheets(urlParam) {
+  const url = urlParam || sheetsUrl;
+  if (!url) return;
+  setStatus('loading', 'Sheets에서 데이터 가져오는 중...');
+  try {
+    const text = await fetchWithFallback(url);
+    const parsed = parseCSV(text);
+    if (!parsed.length) throw new Error('데이터 파싱 실패');
+
+    // Sheets 데이터를 그대로 items로 사용
+    items = parsed;
+    localStorage.setItem('pf_last_update', Date.now().toString());
+    setStatus('ok', `✓ ${items.length}개 종목 가져옴`);
+
+    // DB에 저장
+    autoSave();
+    render();
+  } catch(e) {
+    setStatus('err', 'Sheets 가져오기 실패');
+    document.getElementById('error-area').innerHTML =
+      `<div class="error-box"><strong>Sheets 가져오기 실패</strong><br>${e.message}</div>`;
+  }
 }
 
 // Sheets에서 현재가만 가져와서 DB items에 merge
