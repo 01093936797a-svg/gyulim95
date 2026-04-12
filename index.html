@@ -133,8 +133,8 @@
     .login-btn:disabled{opacity:0.5;cursor:not-allowed}
     .login-error{font-size:13px;color:var(--red-dark);background:var(--red-bg);border-radius:var(--radius);padding:8px 12px;margin-top:10px;display:none}
     .login-error.show{display:block}
-    .user-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);padding:4px 8px;background:var(--bg2);border-radius:20px;cursor:pointer}
-    .user-chip:hover{background:var(--bg3)}
+    .user-chip{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);cursor:pointer;padding:4px;border-radius:var(--radius)}
+    .user-chip:hover{color:var(--text);background:var(--bg2)}
 
     /* FAB */
     .fab{position:fixed;bottom:2rem;right:2rem;width:56px;height:56px;border-radius:50%;background:var(--text);color:var(--bg);border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.18);z-index:100;transition:opacity .15s}
@@ -287,10 +287,6 @@
         <span class="sync-status" id="sync-status" style="margin-left:4px"></span>
       </span>
       <button class="btn btn-sm" onclick="loadSheets()" style="padding:3px 8px;font-size:11px">↻</button>
-    </div>
-    <div class="user-chip" id="user-chip" onclick="doLogout()">
-      <span id="user-name">—</span>
-      <span style="font-size:10px">로그아웃</span>
     </div>
     <button class="notif-btn" onclick="toggleNotif()" title="알림">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -563,7 +559,13 @@
   <div class="notif-panel">
     <div class="notif-header">
       <h3>알림</h3>
-      <button class="btn-del" onclick="closeNotif()">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="user-name" style="font-size:12px;color:var(--text2)">—</span>
+        <button title="로그아웃" onclick="doLogout()" style="background:none;border:none;cursor:pointer;color:var(--text2);padding:2px 4px;border-radius:4px;font-size:13px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M13 3h4v14h-4M9 14l4-4-4-4M13 10H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn-del" onclick="closeNotif()">✕</button>
+      </div>
     </div>
     <div class="notif-list" id="notif-list"></div>
   </div>
@@ -721,7 +723,7 @@ function showLoginError(msg) {
 
 function showApp(name) {
   document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('user-name').textContent = name;
+  document.querySelectorAll('#user-name').forEach(el => el.textContent = name);
   loadDB();
 }
 
