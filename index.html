@@ -707,6 +707,10 @@ async function doLogin() {
 
     localStorage.setItem('pf_token', data.token);
     localStorage.setItem('pf_user', data.name);
+    // config 탭에서 가져온 sheetsUrl 저장
+    if (data.sheetsUrl) {
+      localStorage.setItem('pf_sheets_url_' + data.name, data.sheetsUrl);
+    }
     showApp(data.name);
   } catch(e) {
     showLoginError(e.message);
@@ -836,7 +840,11 @@ async function loadDB() {
     items     = data.items     || [];
     targets   = data.targets   || {};
     snapshots = data.snapshots || [];
-    sheetsUrl      = data.sheetsUrl || '';
+    // sheetsUrl 우선순위: DB저장값 > 로그인시 config에서 가져온 값
+    const userName = localStorage.getItem('pf_user') || '';
+    sheetsUrl      = data.sheetsUrl
+      || localStorage.getItem('pf_sheets_url_' + userName)
+      || '';
     rebalThreshold = data.rebalThreshold || 5;
 
     // Sheets URL 입력란 업데이트
