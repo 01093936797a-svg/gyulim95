@@ -288,13 +288,23 @@
       </span>
       <button class="btn btn-sm" onclick="loadSheets()" style="padding:3px 8px;font-size:11px">↻</button>
     </div>
-    <button class="notif-btn" onclick="toggleNotif()" title="알림">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-        <path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>
-      <span class="notif-count" id="notif-count"></span>
-    </button>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span id="user-name" style="font-size:12px;color:var(--text2)">—</span>
+      <button class="notif-btn" onclick="toggleNotif()" title="알림">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+          <path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <span class="notif-count" id="notif-count"></span>
+      </button>
+      <button class="notif-btn" onclick="doLogout()" title="로그아웃">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+          <path d="M13 3h4v14h-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 14l4-4-4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 10H3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
   </div>
   <div class="sync-bar" id="sync-bar">
     <span style="font-size:12px;color:var(--text2);white-space:nowrap">Sheets URL</span>
@@ -559,13 +569,7 @@
   <div class="notif-panel">
     <div class="notif-header">
       <h3>알림</h3>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span id="user-name" style="font-size:12px;color:var(--text2)">—</span>
-        <button title="로그아웃" onclick="doLogout()" style="background:none;border:none;cursor:pointer;color:var(--text2);padding:2px 4px;border-radius:4px;font-size:13px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M13 3h4v14h-4M9 14l4-4-4-4M13 10H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button class="btn-del" onclick="closeNotif()">✕</button>
-      </div>
+      <button class="btn-del" onclick="closeNotif()">✕</button>
     </div>
     <div class="notif-list" id="notif-list"></div>
   </div>
