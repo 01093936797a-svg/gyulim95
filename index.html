@@ -121,6 +121,30 @@
 
     /* 로그인 */
     .login-overlay{position:fixed;inset:0;background:var(--bg3);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+
+    /* 온보딩 */
+    .onboard-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400;display:none;align-items:center;justify-content:center;padding:1rem}
+    .onboard-overlay.open{display:flex}
+    .onboard-box{background:var(--bg);border-radius:var(--radius-lg);width:100%;max-width:540px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+    .onboard-header{padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border);flex-shrink:0}
+    .onboard-header h3{font-size:16px;font-weight:500;margin-bottom:4px}
+    .onboard-header p{font-size:13px;color:var(--text2)}
+    .onboard-body{padding:1.5rem;overflow-y:auto;flex:1}
+    .upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:2rem;text-align:center;cursor:pointer;transition:border-color .15s;position:relative}
+    .upload-zone:hover{border-color:var(--blue)}
+    .upload-zone.has-files{border-color:var(--green);background:var(--green-bg)}
+    .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .upload-icon{font-size:28px;margin-bottom:8px}
+    .upload-label{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+    .upload-sub{font-size:12px;color:var(--text2)}
+    .preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:1rem}
+    .preview-img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:var(--radius);border:0.5px solid var(--border)}
+    .parse-result{margin-top:1.25rem}
+    .parse-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+    .parse-item:last-child{border-bottom:none}
+    .parse-item-name{flex:1;font-weight:500}
+    .parse-item-detail{color:var(--text2);font-size:12px}
+    .onboard-footer{padding:1rem 1.5rem;border-top:0.5px solid var(--border);display:flex;gap:8px;flex-shrink:0}
     .login-box{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:360px}
     .login-title{font-size:20px;font-weight:500;margin-bottom:4px}
     .login-sub{font-size:13px;color:var(--text2);margin-bottom:1.75rem}
@@ -274,6 +298,42 @@
     </div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">로그인</button>
     <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- 온보딩 모달 -->
+<div class="onboard-overlay" id="onboard-overlay">
+  <div class="onboard-box">
+    <div class="onboard-header">
+      <h3>포트폴리오 시작하기</h3>
+      <p>증권사 앱의 잔고 화면을 캡처해서 올려주세요. AI가 자동으로 종목 정보를 읽어올게요.</p>
+    </div>
+    <div class="onboard-body" id="onboard-body">
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="onboard-files" accept="image/*" multiple onchange="previewFiles(this)"/>
+        <div class="upload-icon">📱</div>
+        <div class="upload-label">잔고 화면 캡처 업로드</div>
+        <div class="upload-sub">여러 계좌가 있다면 모두 캡처해서 한 번에 올려주세요<br>JPG, PNG 지원</div>
+      </div>
+      <div class="preview-grid" id="preview-grid"></div>
+      <div id="parse-result-area" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:500">인식된 종목</span>
+          <span style="font-size:12px;color:var(--text2)" id="parse-count"></span>
+        </div>
+        <div id="parse-items-list"></div>
+      </div>
+      <div id="parse-loading" style="display:none;text-align:center;padding:2rem;color:var(--text2);font-size:13px">
+        <div class="ai-spinner" style="margin:0 auto 12px"></div>
+        AI가 종목 정보를 읽는 중...
+      </div>
+      <div id="parse-error" style="display:none" class="error-box"></div>
+    </div>
+    <div class="onboard-footer">
+      <button class="btn" onclick="skipOnboard()" style="flex:1">나중에 직접 입력</button>
+      <button class="btn btn-sm" id="parse-btn" onclick="parseImages()" style="flex:1" disabled>AI로 읽어오기</button>
+      <button class="btn btn-primary" id="apply-btn" onclick="applyOnboard()" style="flex:2;display:none">이대로 시작하기</button>
+    </div>
   </div>
 </div>
 
@@ -742,6 +802,137 @@ function doLogout() {
   location.reload();
 }
 
+// ── 온보딩 ───────────────────────────────────────────────────────
+let parsedOnboardData = null;
+
+function showOnboarding() {
+  document.getElementById('onboard-overlay').classList.add('open');
+}
+
+function skipOnboard() {
+  document.getElementById('onboard-overlay').classList.remove('open');
+  // Sheets URL 있으면 그냥 가져오기
+  if (sheetsUrl) importFromSheets(sheetsUrl);
+}
+
+function previewFiles(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+
+  const grid = document.getElementById('preview-grid');
+  grid.innerHTML = files.map(f => {
+    const url = URL.createObjectURL(f);
+    return `<img class="preview-img" src="${url}"/>`;
+  }).join('');
+
+  document.getElementById('upload-zone').classList.add('has-files');
+  document.getElementById('parse-btn').disabled = false;
+
+  // 업로드 라벨 업데이트
+  document.querySelector('.upload-label').textContent = `${files.length}장 선택됨`;
+}
+
+async function parseImages() {
+  const files = Array.from(document.getElementById('onboard-files').files);
+  if (!files.length) return;
+
+  document.getElementById('parse-loading').style.display = 'block';
+  document.getElementById('parse-result-area').style.display = 'none';
+  document.getElementById('parse-error').style.display = 'none';
+  document.getElementById('parse-btn').disabled = true;
+  document.getElementById('apply-btn').style.display = 'none';
+
+  try {
+    // 이미지를 base64로 변환
+    const images = await Promise.all(files.map(f => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve({
+        data: e.target.result.split(',')[1],
+        mediaType: f.type || 'image/jpeg'
+      });
+      reader.onerror = reject;
+      reader.readAsDataURL(f);
+    })));
+
+    const res = await fetch(API_BASE + '/api/parse', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ images })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || '파싱 실패');
+    }
+
+    parsedOnboardData = await res.json();
+    renderParseResult(parsedOnboardData);
+
+  } catch(e) {
+    const errEl = document.getElementById('parse-error');
+    errEl.style.display = 'block';
+    errEl.textContent = '읽기 실패: ' + e.message;
+  }
+
+  document.getElementById('parse-loading').style.display = 'none';
+  document.getElementById('parse-btn').disabled = false;
+}
+
+function renderParseResult(data) {
+  const allItems = [...(data.items || []), ...(data.cashItems || [])];
+  const total = allItems.length;
+
+  document.getElementById('parse-count').textContent = `총 ${total}개 항목`;
+  document.getElementById('parse-items-list').innerHTML = allItems.map(it => {
+    const isCashItem = !it.qty && !it.avgPrice;
+    return `<div class="parse-item">
+      <div class="parse-item-name">${it.name}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${it.acct ? `<span class="badge" style="background:${(ACCT_COLORS[it.acct]||'#888')}22;color:${ACCT_COLORS[it.acct]||'#888'};font-size:11px">${it.acct}</span>` : ''}
+        ${isCashItem
+          ? `<span class="parse-item-detail">₩${fmt(it.val||0)}</span>`
+          : `<span class="parse-item-detail">${it.qty}주 · 평균 ₩${fmt(it.avgPrice||0)}</span>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('parse-result-area').style.display = 'block';
+  document.getElementById('apply-btn').style.display = 'block';
+}
+
+async function applyOnboard() {
+  if (!parsedOnboardData) return;
+
+  const newItems = [
+    ...(parsedOnboardData.items || []).map(it => ({
+      ...it,
+      ticker: it.ticker || it.name,
+      stop: null, buy: null
+    })),
+    ...(parsedOnboardData.cashItems || []).map(it => ({
+      name: it.name || '예수금',
+      ticker: it.name || '예수금',
+      type: '',
+      acct: it.acct || '종합',
+      qty: 1,
+      avgPrice: it.val || 0,
+      curPrice: it.val || 0,
+      val: it.val || 0,
+      ret: 0,
+      stop: null, buy: null
+    }))
+  ];
+
+  items = newItems;
+  document.getElementById('onboard-overlay').classList.remove('open');
+  autoSave();
+  render();
+
+  // Sheets URL 있으면 현재가 업데이트
+  if (sheetsUrl) await refreshPrices(sheetsUrl);
+}
+
 // ── 종목 추가/수정/삭제 ───────────────────────────────────────────
 function openItemModal() {
   document.getElementById('item-modal-title').textContent = '종목 추가';
@@ -858,18 +1049,12 @@ async function loadDB() {
     // DB 데이터로 먼저 렌더링
     render();
 
-    if (sheetsUrl) {
-      if (items.length === 0) {
-        // DB에 종목이 없으면 Sheets에서 전체 데이터 import
-        await importFromSheets(sheetsUrl);
-      } else {
-        // DB에 종목이 있으면 현재가만 업데이트
-        await refreshPrices(sheetsUrl);
-      }
-    } else {
-      document.getElementById('sync-bar').classList.add('open');
-      document.getElementById('sync-toggle-icon').textContent = '▼';
-      setStatus('warn', 'Sheets URL을 입력해주세요');
+    if (items.length === 0) {
+      // 종목 없으면 온보딩 모달 표시
+      showOnboarding();
+    } else if (sheetsUrl) {
+      // 종목 있으면 현재가만 업데이트
+      await refreshPrices(sheetsUrl);
     }
   } catch(e) {
     console.error('DB 로드 실패:', e);
