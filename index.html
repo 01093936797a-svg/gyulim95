@@ -330,8 +330,9 @@
       <div id="parse-error" style="display:none" class="error-box"></div>
     </div>
     <div class="onboard-footer">
-      <button class="btn" onclick="skipOnboard()" style="flex:1">나중에 직접 입력</button>
-      <button class="btn btn-sm" id="parse-btn" onclick="parseImages()" style="flex:1" disabled>AI로 읽어오기</button>
+      <button class="btn" onclick="skipOnboard()" style="flex:1">직접 입력</button>
+      <button class="btn" id="sheets-import-btn" onclick="importAndClose()" style="flex:1.5;display:none">Sheets에서 가져오기</button>
+      <button class="btn" id="parse-btn" onclick="parseImages()" style="flex:1.5" disabled>AI로 읽어오기</button>
       <button class="btn btn-primary" id="apply-btn" onclick="applyOnboard()" style="flex:2;display:none">이대로 시작하기</button>
     </div>
   </div>
@@ -807,6 +808,19 @@ let parsedOnboardData = null;
 
 function showOnboarding() {
   document.getElementById('onboard-overlay').classList.add('open');
+  // Sheets URL 있으면 "Sheets에서 가져오기" 버튼 표시
+  const sheetsBtn = document.getElementById('sheets-import-btn');
+  if (sheetsBtn) sheetsBtn.style.display = sheetsUrl ? 'block' : 'none';
+}
+
+async function importAndClose() {
+  const btn = document.getElementById('sheets-import-btn');
+  btn.textContent = '가져오는 중...';
+  btn.disabled = true;
+  document.getElementById('onboard-overlay').classList.remove('open');
+  await importFromSheets(sheetsUrl);
+  btn.textContent = 'Sheets에서 가져오기';
+  btn.disabled = false;
 }
 
 function skipOnboard() {
